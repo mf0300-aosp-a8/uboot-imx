@@ -914,6 +914,8 @@ iomux_v3_cfg_t const pwr_key_pads[] = {
 	MX6_PAD_EIM_LBA__GPIO2_IO27  | MUX_PAD_CTRL(NO_PAD_CTRL),
 	MX6_PAD_NANDF_D4__GPIO2_IO04  | MUX_PAD_CTRL(NO_PAD_CTRL),
 	MX6_PAD_KEY_COL2__GPIO4_IO10  | MUX_PAD_CTRL(NO_PAD_CTRL),
+	MX6_PAD_KEY_COL4__GPIO4_IO14  | MUX_PAD_CTRL(NO_PAD_CTRL),
+	MX6_PAD_KEY_ROW4__GPIO4_IO15  | MUX_PAD_CTRL(NO_PAD_CTRL),
 };
 
 
@@ -1063,6 +1065,8 @@ int board_late_init(void)
 	board_late_mmc_env_init();
 #endif
 
+	gpio_direction_output(IMX_GPIO_NR(4, 14), 1);
+	gpio_direction_output(IMX_GPIO_NR(4, 15), 1);
 	return 0;
 }
 
