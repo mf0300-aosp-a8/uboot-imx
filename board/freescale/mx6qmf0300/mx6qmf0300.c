@@ -1177,6 +1177,10 @@ void board_recovery_setup(void)
 				"${recovery_nand_size};booti ${loadaddr}");
 		break;
 #endif /*CONFIG_FASTBOOT_STORAGE_NAND*/
+	case 13:
+		if (!getenv("bootcmd_android_recovery"))
+			setenv("bootcmd_android_recovery", "booti mmc1 recovery");
+		break;
 	default:
 		printf("Unsupported bootup device for recovery: dev: %d\n",
 			bootdev);
