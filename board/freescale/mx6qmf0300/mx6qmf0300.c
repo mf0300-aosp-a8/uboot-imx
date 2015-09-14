@@ -910,6 +910,83 @@ u32 get_board_rev(void)
 	return (get_cpu_rev() & ~(0xF << 8)) | rev;
 }
 
+iomux_v3_cfg_t const pwr_key_pads[] = {
+	MX6_PAD_EIM_LBA__GPIO2_IO27  | MUX_PAD_CTRL(NO_PAD_CTRL),
+	MX6_PAD_NANDF_D4__GPIO2_IO04  | MUX_PAD_CTRL(NO_PAD_CTRL),
+	MX6_PAD_KEY_COL2__GPIO4_IO10  | MUX_PAD_CTRL(NO_PAD_CTRL),
+};
+
+
+//#define __DELAY_POWER_KEY_SIGNAL__
+#define DEBOUNCE_TIME_MS 100
+static int get_power_key_signal(void)
+{
+	u32 reset_cause;
+
+	gpio_direction_input(IMX_GPIO_NR(2, 27));
+	reset_cause = readl(SRC_BASE_ADDR + 0x8);
+	writel(reset_cause, SRC_BASE_ADDR + 0x8);
+
+#ifdef __DELAY_POWER_KEY_SIGNAL__ 
+	do
+	{
+		if(0x0001 != reset_cause)
+		{
+			//This state is not normal power on, it may be caused by reset or watchdog
+			return 1;
+		}
+		else
+		{
+			if(gpio_get_value(IMX_GPIO_NR(2, 27)))
+			{
+			//This state is normal power on
+				return 1;
+			}
+		}
+	}while(1);
+#else
+	{
+		if(0x0001 == reset_cause) {
+			mdelay(DEBOUNCE_TIME_MS); 
+			if(gpio_get_value(IMX_GPIO_NR(2, 27)))
+				return 1;
+			else
+				return 0;
+		}else {
+			return 1;
+		}
+
+
+	}
+#endif
+	return 0;
+}
+
+#define TF9300_CMD_SOC          0x2C
+int battery_level(void)
+{
+	u8 buf[4];
+
+	if (!i2c_probe(0x55)) {
+		if (i2c_read(0x55, (uint)TF9300_CMD_SOC, 1, &buf[0], 2)) {
+			printf("%s:i2c_write:error\n", __func__);
+			return -1;
+		}
+       		return ((int)(buf[1]<<8)+buf[0]);	
+       }
+	return -1;
+}
+
+int ac_off_detect(void)
+{
+	gpio_direction_input(IMX_GPIO_NR(4, 10));
+	return (gpio_get_value(IMX_GPIO_NR(4, 10)) & (1 << 10));
+}
+
+void power_off(void){
+	gpio_set_value(IMX_GPIO_NR(2, 4), 0);
+}
+
 int board_early_init_f(void)
 {
 	setup_iomux_uart();
@@ -943,6 +1020,13 @@ int board_early_init_f(void)
 
 int board_init(void)
 {
+	imx_iomux_v3_setup_multiple_pads(pwr_key_pads,
+					 ARRAY_SIZE(pwr_key_pads));
+	if(get_power_key_signal())
+		//Can's requirement for pull up SYS_ON_CTL
+		gpio_direction_output(IMX_GPIO_NR(2, 4), 1);
+	else
+		gpio_direction_output(IMX_GPIO_NR(2, 4), 0);
 	/* address of boot parameters */
 	gd->bd->bi_boot_params = PHYS_SDRAM + 0x100;
 
