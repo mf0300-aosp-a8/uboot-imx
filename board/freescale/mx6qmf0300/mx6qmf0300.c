@@ -83,6 +83,10 @@ DECLARE_GLOBAL_DATA_PTR;
 			PAD_CTL_SRE_FAST)
 #define GPMI_PAD_CTRL2 (GPMI_PAD_CTRL0 | GPMI_PAD_CTRL1)
 
+#ifdef CONFIG_DYNAMIC_BMP
+extern int fic_bmp_dynamic(void);
+#endif
+
 int dram_init(void)
 {
 	gd->ram_size = ((ulong)CONFIG_DDR_MB * 1024 * 1024);
@@ -686,6 +690,17 @@ static struct display_info_t const displays[] = {{
 	.mode	= {
 		.name           = "LG",
 		.refresh        = 60,
+#ifdef CONFIG_LVDS_1024
+		.xres           = 1024,
+		.yres           = 768,
+		.pixclock       = 15384,
+		.left_margin    = 100,
+		.right_margin   = 100,
+		.upper_margin   = 10,
+		.lower_margin   = 15,
+		.hsync_len      = 50,
+		.vsync_len      = 13,
+#else
 		.xres           = 1366,
 		.yres           = 768,
 		.pixclock       = 14430,
@@ -695,6 +710,7 @@ static struct display_info_t const displays[] = {{
 		.lower_margin   = 3,
 		.hsync_len      = 32,
 		.vsync_len      = 6,
+#endif
 		.sync           = FB_SYNC_EXT,
 		.vmode          = FB_VMODE_NONINTERLACED
 } }, {
@@ -764,6 +780,9 @@ int board_video_skip(void)
 		return -EINVAL;
 	}
 
+#ifdef CONFIG_DYNAMIC_BMP
+	fic_bmp_dynamic();
+#endif
 	return 0;
 }
 

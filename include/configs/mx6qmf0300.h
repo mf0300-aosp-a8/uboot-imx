@@ -47,4 +47,20 @@
 #define CONFIG_SF_DEFAULT_CS   (1|(IMX_GPIO_NR(3, 19)<<8))
 #endif
 
+
+#undef CONFIG_VIDEO_BMP_LOGO
+#define CONFIG_SPLASH_SCREEN
+#define CONFIG_DYNAMIC_BMP
+
+#if defined(CONFIG_ANDROID_SUPPORT)
+#undef CONFIG_EXTRA_ENV_SETTINGS
+
+#define CONFIG_EXTRA_ENV_SETTINGS					\
+	"splashimage=0x11800000\0"		\
+	"splashpos=m,m\0"	  \
+	"fdt_high=0xffffffff\0"	  \
+	"initrd_high=0xffffffff\0" \
+
+#endif
+
 #endif                         /* __MX6QMF0300_CONFIG_H */

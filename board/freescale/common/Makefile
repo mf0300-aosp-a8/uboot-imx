@@ -34,6 +34,8 @@ ifndef CONFIG_RAMBOOT_PBL
 obj-$(CONFIG_FSL_FIXED_MMC_LOCATION)	+= sdhc_boot.o
 endif
 
+obj-${CONFIG_DYNAMIC_BMP}	+= fsl_bmp_dynamic.o
+ 
 obj-$(CONFIG_MPC8541CDS)	+= cds_pci_ft.o
 obj-$(CONFIG_MPC8548CDS)	+= cds_pci_ft.o
 obj-$(CONFIG_MPC8555CDS)	+= cds_pci_ft.o
