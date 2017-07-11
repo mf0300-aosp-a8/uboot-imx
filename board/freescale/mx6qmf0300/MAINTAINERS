@@ -1,0 +1,6 @@
+MX6QMF0300 BOARD
+M:	Shih-Yuan Huang <timmy@fic.com.tw>
+S:	Maintained
+F:	board/freescale/mx6qmf0300/
+F:	include/configs/mx6qmf0300.h
+F:	configs/mx6qmf0300_wxga_defconfig
