@@ -669,47 +669,81 @@ static void do_enable_hdmi(struct display_info_t const *dev)
 	imx_enable_hdmi_phy();
 }
 
-struct display_info_t const displays[] = {{
-	.bus	= -1,
-	.addr	= 0,
-	.pixfmt	= IPU_PIX_FMT_RGB666,
-	.detect	= NULL,
-	.enable	= NULL,
-	.mode	= {
-		.name           = "LG",
-		.refresh        = 60,
-		.xres           = 1366,
-		.yres           = 768,
-		.pixclock       = 14430,
-		.left_margin    = 10,
-		.right_margin   = 48,
-		.upper_margin   = 16,
-		.lower_margin   = 3,
-		.hsync_len      = 32,
-		.vsync_len      = 6,
-		.sync           = FB_SYNC_EXT,
-		.vmode          = FB_VMODE_NONINTERLACED
-} }, {
-	.bus	= -1,
-	.addr	= 0,
-	.pixfmt	= IPU_PIX_FMT_RGB24,
-	.detect	= NULL,
-	.enable	= do_enable_hdmi,
-	.mode	= {
-		.name           = "HDMI",
-		.refresh        = 60,
-		.xres           = 640,
-		.yres           = 480,
-		.pixclock       = 39721,
-		.left_margin    = 48,
-		.right_margin   = 16,
-		.upper_margin   = 33,
-		.lower_margin   = 10,
-		.hsync_len      = 96,
-		.vsync_len      = 2,
-		.sync           = 0,
-		.vmode          = FB_VMODE_NONINTERLACED
-} } };
+struct display_info_t const displays[] =
+{
+#if defined(CONFIG_LVDS_1024)
+	{
+		.bus	= -1,
+		.addr	= 0,
+		.pixfmt	= IPU_PIX_FMT_RGB666,
+		.detect	= NULL,
+		.enable	= NULL,
+		.mode	=
+		{
+			.name           = "LG-XGA",
+			.refresh        = 60,
+			.xres           = 1024,
+			.yres           = 768,
+			.pixclock       = 15384,
+			.left_margin    = 100,
+			.right_margin   = 100,
+			.upper_margin   = 10,
+			.lower_margin   = 15,
+			.hsync_len      = 50,
+			.vsync_len      = 13,
+			.sync           = FB_SYNC_EXT,
+			.vmode          = FB_VMODE_NONINTERLACED
+		}
+	},	
+#else
+	{
+		.bus	= -1,
+		.addr	= 0,
+		.pixfmt	= IPU_PIX_FMT_RGB666,
+		.detect	= NULL,
+		.enable	= NULL,
+		.mode	=
+		{
+			.name           = "LG-WXGA",
+			.refresh        = 60,
+			.xres           = 1366,
+			.yres           = 768,
+			.pixclock       = 14430,
+			.left_margin    = 10,
+			.right_margin   = 48,
+			.upper_margin   = 16,
+			.lower_margin   = 3,
+			.hsync_len      = 32,
+			.vsync_len      = 6,
+			.sync           = FB_SYNC_EXT,
+			.vmode          = FB_VMODE_NONINTERLACED
+		}
+	},
+#endif
+	{
+		.bus	= -1,
+		.addr	= 0,
+		.pixfmt	= IPU_PIX_FMT_RGB24,
+		.detect	= NULL,
+		.enable	= do_enable_hdmi,
+		.mode	=
+		{
+			.name           = "HDMI",
+			.refresh        = 60,
+			.xres           = 640,
+			.yres           = 480,
+			.pixclock       = 39721,
+			.left_margin    = 48,
+			.right_margin   = 16,
+			.upper_margin   = 33,
+			.lower_margin   = 10,
+			.hsync_len      = 96,
+			.vsync_len      = 2,
+			.sync           = 0,
+			.vmode          = FB_VMODE_NONINTERLACED
+		}
+	}
+};
 size_t display_count = ARRAY_SIZE(displays);
 
 iomux_v3_cfg_t const lvds_pads[] = {

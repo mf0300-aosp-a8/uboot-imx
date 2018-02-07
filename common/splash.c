@@ -32,13 +32,7 @@ __weak int splash_screen_prepare(void)
 #ifdef CONFIG_SPLASH_SCREEN_ALIGN
 void splash_get_pos(int *x, int *y)
 {
-/* the splashpos setting is taken from the NAND
- * if it is available there, so to be 100% sure
- * that the splash logo is in the center, we hardcode
- * the offset values for mf0300 board
- */
-#ifndef __MX6QMF0300_CONFIG_H
-	char *s = getenv("splashpos");
+        char *s = getenv("splashpos");
 
         if (!s)
                 return;
@@ -55,10 +49,6 @@ void splash_get_pos(int *x, int *y)
                 else
                         *y = simple_strtol(s + 1, NULL, 0);
         }
-#else
-	*x = 350;
-	*y = 300;
-#endif
 }
 #endif /* CONFIG_SPLASH_SCREEN_ALIGN */
 
