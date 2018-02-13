@@ -1013,12 +1013,69 @@ static int rx_process_erase(const char *cmdbuf, char *response)
 			sprintf(response, "OKAY");
 		}
 	}
-	return 0;
+#elif defined(CONFIG_CMD_MMC)
+	struct fastboot_ptentry *ptn;
+	ptn = fastboot_flash_find_ptn(cmdbuf);
+	if (ptn == 0) {
+	       printf("Partition: '%s' does not exist\n", cmdbuf);
+	       sprintf(response, "FAILpartition does not exist");
+	       return -1;
+	}
+
+	printf("Erase partition '%s', cmdbuf: %s\n", ptn->name, cmdbuf);
+	unsigned int temp;
+	int mmcret;
+	char mmc_dev[128];
+	char mmc_erase[128];
+
+	/* set 'select device' command */
+	sprintf(mmc_dev, "mmc dev %x %x",
+		fastboot_devinfo.dev_id, /* slot no */
+		ptn->partition_id /* part no */);
+
+	/* calculate blocks count */
+	temp = (ptn->length +
+		    MMC_SATA_BLOCK_SIZE - 1) /
+		    MMC_SATA_BLOCK_SIZE;
+
+	/* set 'erase' command */
+	sprintf(mmc_erase, "mmc erase %x %x",
+		ptn->start, /* offset start */
+		temp /* blocks count */);
+
+	printf("Partition info: %s\n ", ptn->name);
+	printf("partition_id: %d, partition_index: %d\n ", ptn->partition_id, ptn->partition_index);
+	printf("start: 0x%x, length: 0x%x, blocks: %d, flags: %d\n ", ptn->start, ptn->length, temp, ptn->flags);
+	printf("Fastboot devinfo dev_id: %d, type: %d\n ", fastboot_devinfo.dev_id, fastboot_devinfo.type);
+
+	printf("Initializing '%s'\n", ptn->name);
+	/* run 'select device' command */
+	mmcret = run_command(mmc_dev, 0);
+
+	if (mmcret)
+	       sprintf(response, "FAIL:Init of MMC card: %d", mmcret);
+	else
+	       sprintf(response, "OKAY");
+
+	printf("Erasing '%s'\n", ptn->name);
+	/* run 'erase' command */
+	int attempts = 20;
+	do {
+		mmcret = run_command(mmc_erase, 0);
+	}while(--attempts != 0 && mmcret);
+
+	if (mmcret) {
+	       printf("Erasing '%s' FAILED: %d\n", ptn->name, mmcret);
+	       sprintf(response, "FAIL: Erase fail, try again");
+	} else {
+	       printf("Erasing '%s' DONE!\n", ptn->name);
+	       sprintf(response, "OKAY");
+	}
 #else
-	printf("Not support erase command for EMMC\n");
+	printf("Not supported erase command, cmdbuf: %s\n", cmdbuf);
 	return -1;
 #endif
-
+	return 0;
 }
 
 static void rx_process_flash(const char *cmdbuf, char *response)
