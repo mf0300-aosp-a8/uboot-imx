@@ -463,6 +463,13 @@ config TARGET_MX6SXSCM
         select DM_THERMAL
         select BOARD_EARLY_INIT_F
 
+config TARGET_FX3LX
+	bool "fx3lx"
+	select BOARD_LATE_INIT
+	select DM
+	select DM_THERMAL
+	select BOARD_EARLY_INIT_F
+
 endchoice
 
 config SYS_SOC
@@ -519,5 +526,6 @@ source "board/wandboard/Kconfig"
 source "board/warp/Kconfig"
 source "board/freescale/mx6dqscm/Kconfig"
 source "board/freescale/mx6sxscm/Kconfig"
+source "board/sato/fx3lx/Kconfig"
 
 endif

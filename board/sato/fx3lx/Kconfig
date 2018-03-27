@@ -1,0 +1,12 @@
+if TARGET_FX3LX
+
+config SYS_BOARD
+	default "fx3lx"
+
+config SYS_VENDOR
+	default "sato"
+
+config SYS_CONFIG_NAME
+	default "fx3lx"
+
+endif

@@ -1,0 +1,6 @@
+FX3LX BOARD
+M:	Ryosuke Saito <ryosuke.saito@sato-global.com>
+S:	Maintained
+F:	board/sato/fx3lx/
+F:	include/configs/fx3lx.h
+F:	configs/fx3lx_defconfig
