@@ -844,16 +844,62 @@ static int is_sparse_partition(struct fastboot_ptentry *ptn)
 		 return 0;
 }
 
+static void write_raw_raw_data(block_dev_desc_t *dev_desc, long start, int blksz,
+               void *buffer, unsigned int download_bytes, char *response)
+{
+	lbaint_t blkcnt;
+	lbaint_t blks;
+
+	/* determine number of blocks to write */
+	blkcnt = ((download_bytes + (blksz - 1)) & ~(blksz - 1));
+	blkcnt = blkcnt / blksz;
+
+	printf("Flashing " LBAFU " bytes raw data to address 0x%lx\n",
+		blkcnt * blksz, start);
+	blks = dev_desc->block_write(dev_desc->dev, start / blksz,
+		blkcnt, buffer);
+	if (blks != blkcnt) {
+		printf("failed writing to device %d, address 0x%lx\n",
+			dev_desc->dev, start);
+		sprintf(response, "FAILfailed writing raw data to address 0x%lx", start);
+		return;
+	}
+	printf("........ wrote " LBAFU " bytes to address 0x%lx\n",
+		blkcnt * blksz, start);
+	sprintf(response, "OKAY");
+}
+
+static void fb_mmc_flash_write_raw(const char *cmd, void *download_buffer,
+                       unsigned int download_bytes, char *response)
+{
+	block_dev_desc_t *dev_desc;
+	long start_addr;
+
+	dev_desc = get_dev("mmc", CONFIG_SYS_MMC_ENV_DEV);
+	/* fallback on using the 'partition name' as a number */
+	start_addr = simple_strtol(cmd, NULL, 16);
+	write_raw_raw_data(dev_desc, start_addr, dev_desc->blksz,
+		download_buffer, download_bytes, response);
+}
+
 static void process_flash_mmc(const char *cmdbuf, char *response)
 {
 	if (download_bytes) {
+		/* if partition name is hex raw address - write data to this address */
+		if((!strncmp(cmdbuf, "0x", 2) || !strncmp(cmdbuf, "0X", 2)) && strlen(cmdbuf) > 2) {
+			if(strspn(cmdbuf + 2, "0123456789abcdefABCDEF") == strlen(cmdbuf) - 2) {
+				fb_mmc_flash_write_raw(cmdbuf, (void *)CONFIG_USB_FASTBOOT_BUF_ADDR,
+					download_bytes, response);
+				return;
+			}
+		}
 		struct fastboot_ptentry *ptn;
 
 		/* Next is the partition name */
 		ptn = fastboot_flash_find_ptn(cmdbuf);
 		if (ptn == 0) {
-			printf("Partition:'%s' does not exist\n", ptn->name);
-			sprintf(response, "FAILpartition does not exist");
+			printf("Invalid partition or address:'%s' does not exist\n", ptn->name);
+			sprintf(response, "FAILinvalid partition or address - does not exist");
 		} else if ((download_bytes >
 			   ptn->length * MMC_SATA_BLOCK_SIZE) &&
 				!(ptn->flags & FASTBOOT_PTENTRY_FLAGS_WRITE_ENV)) {
