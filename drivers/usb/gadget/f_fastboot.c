@@ -164,13 +164,17 @@ static struct usb_gadget_strings *fastboot_strings[] = {
 /*pentry index internally*/
 enum {
 	PTN_MBR_INDEX = 0,
-	PTN_BOOTLOADER_INDEX,
 	PTN_KERNEL_INDEX,
-	PTN_URAMDISK_INDEX,
-	PTN_SYSTEM_INDEX,
 	PTN_RECOVERY_INDEX,
+	PTN_EXTENDED_INDEX,
 	PTN_DATA_INDEX,
+	PTN_SYSTEM_INDEX,
+	PTN_CACHE_INDEX,
+	PTN_DEVICE_INDEX,
+	PTN_MISC_INDEX,
+	PTN_USERDATA_INDEX,
 #ifdef CONFIG_BRILLO_SUPPORT
+	PTN_BOOTLOADER_INDEX,
 	PTN_KERNEL_B_INDEX,
 	PTN_SYSTEM_B_INDEX,
 	PTN_MISC_INDEX,
@@ -1313,6 +1317,8 @@ static int _fastboot_parts_load_from_ptable(void)
 	ptable[PTN_MBR_INDEX].start = ANDROID_MBR_OFFSET / dev_desc->blksz;
 	ptable[PTN_MBR_INDEX].length = ANDROID_MBR_SIZE / dev_desc->blksz;
 	ptable[PTN_MBR_INDEX].partition_id = user_partition;
+
+#ifdef CONFIG_BRILLO_SUPPORT
 	/* Bootloader */
 	strcpy(ptable[PTN_BOOTLOADER_INDEX].name, FASTBOOT_PARTITION_BOOTLOADER);
 	ptable[PTN_BOOTLOADER_INDEX].start =
@@ -1321,7 +1327,6 @@ static int _fastboot_parts_load_from_ptable(void)
 				 ANDROID_BOOTLOADER_SIZE / dev_desc->blksz;
 	ptable[PTN_BOOTLOADER_INDEX].partition_id = boot_partition;
 
-#ifdef CONFIG_BRILLO_SUPPORT
 	_fastboot_parts_add_ptable_entry(PTN_KERNEL_INDEX,
 					 CONFIG_ANDROID_BOOT_PARTITION_MMC,
 					 user_partition,
@@ -1332,6 +1337,12 @@ static int _fastboot_parts_load_from_ptable(void)
 					 CONFIG_ANDROID_RECOVERY_PARTITION_MMC,
 					 user_partition,
 					 FASTBOOT_PARTITION_RECOVERY,
+					 dev_desc, ptable);
+
+	_fastboot_parts_add_ptable_entry(PTN_EXTENDED_INDEX,
+					 CONFIG_ANDROID_EXTENDED_PARTITION_MMC,
+					 user_partition,
+					 FASTBOOT_PARTITION_EXTENDED,
 					 dev_desc, ptable);
 
 	_fastboot_parts_add_ptable_entry(PTN_SYSTEM_INDEX,
@@ -1376,16 +1387,40 @@ static int _fastboot_parts_load_from_ptable(void)
 					 FASTBOOT_PARTITION_RECOVERY,
 					 dev_desc, ptable);
 
+	_fastboot_parts_add_ptable_entry(PTN_DATA_INDEX,
+					 CONFIG_ANDROID_DATA_PARTITION_MMC,
+					 user_partition,
+					 FASTBOOT_PARTITION_DATA,
+					 dev_desc, ptable);
+
 	_fastboot_parts_add_ptable_entry(PTN_SYSTEM_INDEX,
 					 CONFIG_ANDROID_SYSTEM_PARTITION_MMC,
 					 user_partition,
 					 FASTBOOT_PARTITION_SYSTEM,
 					 dev_desc, ptable);
 
-	_fastboot_parts_add_ptable_entry(PTN_DATA_INDEX,
-					 CONFIG_ANDROID_DATA_PARTITION_MMC,
+	_fastboot_parts_add_ptable_entry(PTN_CACHE_INDEX,
+					 CONFIG_ANDROID_CACHE_PARTITION_MMC,
 					 user_partition,
-					 FASTBOOT_PARTITION_DATA,
+					 FASTBOOT_PARTITION_CACHE,
+					 dev_desc, ptable);
+
+	_fastboot_parts_add_ptable_entry(PTN_DEVICE_INDEX,
+					 CONFIG_ANDROID_DEVICE_PARTITION_MMC,
+					 user_partition,
+					 FASTBOOT_PARTITION_DEVICE,
+					 dev_desc, ptable);
+
+	_fastboot_parts_add_ptable_entry(PTN_MISC_INDEX,
+					 CONFIG_ANDROID_MISC_PARTITION_MMC,
+					 user_partition,
+					 FASTBOOT_PARTITION_MISC,
+					 dev_desc, ptable);
+
+	_fastboot_parts_add_ptable_entry(PTN_USERDATA_INDEX,
+					 CONFIG_ANDROID_USERDATA_PARTITION_MMC,
+					 user_partition,
+					 FASTBOOT_PARTITION_USERDATA,
 					 dev_desc, ptable);
 #endif
 

@@ -45,9 +45,13 @@
 #else
 #define FASTBOOT_PARTITION_BOOT "boot"
 #define FASTBOOT_PARTITION_RECOVERY "recovery"
-#define FASTBOOT_PARTITION_SYSTEM "system"
-#define FASTBOOT_PARTITION_BOOTLOADER "bootloader"
+#define FASTBOOT_PARTITION_EXTENDED "extended"
 #define FASTBOOT_PARTITION_DATA "data"
+#define FASTBOOT_PARTITION_SYSTEM "system"
+#define FASTBOOT_PARTITION_CACHE "cache"
+#define FASTBOOT_PARTITION_DEVICE "device"
+#define FASTBOOT_PARTITION_MISC "misc"
+#define FASTBOOT_PARTITION_USERDATA "userdata"
 #endif
 
 enum {
