@@ -663,6 +663,16 @@ static void disable_lvds(struct display_info_t const *dev)
 	writel(reg, &iomux->gpr[2]);
 }
 
+static void enable_lvds(struct display_info_t const *dev)
+{
+	struct iomuxc *iomux = (struct iomuxc *)
+				IOMUXC_BASE_ADDR;
+	u32 reg = readl(&iomux->gpr[2]);
+	reg |= IOMUXC_GPR2_DATA_WIDTH_CH0_18BIT |
+	       IOMUXC_GPR2_DATA_WIDTH_CH1_18BIT;
+	writel(reg, &iomux->gpr[2]);
+}
+
 static void do_enable_hdmi(struct display_info_t const *dev)
 {
 	disable_lvds(dev);
@@ -671,16 +681,15 @@ static void do_enable_hdmi(struct display_info_t const *dev)
 
 struct display_info_t const displays[] =
 {
-#if defined(CONFIG_LVDS_1024)
 	{
 		.bus	= -1,
 		.addr	= 0,
 		.pixfmt	= IPU_PIX_FMT_RGB666,
 		.detect	= NULL,
-		.enable	= NULL,
+		.enable	= enable_lvds,
 		.mode	=
 		{
-			.name           = "LG-XGA",
+			.name           = "LG-XGA-15",
 			.refresh        = 60,
 			.xres           = 1024,
 			.yres           = 768,
@@ -694,17 +703,16 @@ struct display_info_t const displays[] =
 			.sync           = FB_SYNC_EXT,
 			.vmode          = FB_VMODE_NONINTERLACED
 		}
-	},	
-#else
+	},
 	{
 		.bus	= -1,
 		.addr	= 0,
 		.pixfmt	= IPU_PIX_FMT_RGB666,
 		.detect	= NULL,
-		.enable	= NULL,
+		.enable	= enable_lvds,
 		.mode	=
 		{
-			.name           = "LG-WXGA",
+			.name           = "LG-WXGA-13",
 			.refresh        = 60,
 			.xres           = 1366,
 			.yres           = 768,
@@ -719,7 +727,6 @@ struct display_info_t const displays[] =
 			.vmode          = FB_VMODE_NONINTERLACED
 		}
 	},
-#endif
 	{
 		.bus	= -1,
 		.addr	= 0,
