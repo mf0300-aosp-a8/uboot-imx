@@ -179,21 +179,30 @@ always := $(hostprogs-y)
 # Generated LCD/video logo
 LOGO_H = $(objtree)/include/bmp_logo.h
 LOGO_DATA_H = $(objtree)/include/bmp_logo_data.h
+LOGO_H_XGA = $(objtree)/include/bmp_logo_xga.h
+LOGO_DATA_H_XGA = $(objtree)/include/bmp_logo_data_xga.h
 LOGO-$(CONFIG_LCD_LOGO) += $(LOGO_H)
 LOGO-$(CONFIG_LCD_LOGO) += $(LOGO_DATA_H)
 LOGO-$(CONFIG_VIDEO_LOGO) += $(LOGO_H)
 LOGO-$(CONFIG_VIDEO_LOGO) += $(LOGO_DATA_H)
+LOGO-$(CONFIG_LCD_LOGO) += $(LOGO_H_XGA)
+LOGO-$(CONFIG_LCD_LOGO) += $(LOGO_DATA_H_XGA)
+LOGO-$(CONFIG_VIDEO_LOGO) += $(LOGO_H_XGA)
+LOGO-$(CONFIG_VIDEO_LOGO) += $(LOGO_DATA_H_XGA)
 
 # Generic logo
 ifeq ($(LOGO_BMP),)
 LOGO_BMP= $(srctree)/$(src)/logos/denx.bmp
+LOGO_BMP_XGA= $(srctree)/$(src)/logos/denx.bmp
 
 # Use board logo and fallback to vendor
 ifneq ($(wildcard $(srctree)/$(src)/logos/$(BOARD).bmp),)
 LOGO_BMP= $(srctree)/$(src)/logos/$(BOARD).bmp
+LOGO_BMP_XGA= $(srctree)/$(src)/logos/$(BOARD)_xga.bmp
 else
 ifneq ($(wildcard $(srctree)/$(src)/logos/$(VENDOR).bmp),)
 LOGO_BMP= $(srctree)/$(src)/logos/$(VENDOR).bmp
+LOGO_BMP_XGA= $(srctree)/$(src)/logos/$(VENDOR)_xga.bmp
 endif
 endif
 
@@ -220,6 +229,12 @@ $(LOGO_H):	$(obj)/bmp_logo $(LOGO_BMP)
 
 $(LOGO_DATA_H):	$(obj)/bmp_logo $(LOGO_BMP)
 	$(obj)/bmp_logo --gen-data $(LOGO_BMP) > $@
+
+$(LOGO_H_XGA):	$(obj)/bmp_logo $(LOGO_BMP_XGA)
+	$(obj)/bmp_logo --gen-info $(LOGO_BMP_XGA) > $@
+
+$(LOGO_DATA_H_XGA):	$(obj)/bmp_logo $(LOGO_BMP_XGA)
+	$(obj)/bmp_logo --gen-data $(LOGO_BMP_XGA) > $@
 
 # Let clean descend into subdirs
 subdir- += env
