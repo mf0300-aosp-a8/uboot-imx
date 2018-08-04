@@ -689,7 +689,7 @@ struct display_info_t const displays[] =
 		.enable	= enable_lvds,
 		.mode	=
 		{
-			.name           = "LG-XGA-15",
+			.name           = "LGXGA15",
 			.refresh        = 60,
 			.xres           = 1024,
 			.yres           = 768,
@@ -712,7 +712,7 @@ struct display_info_t const displays[] =
 		.enable	= enable_lvds,
 		.mode	=
 		{
-			.name           = "LG-WXGA-13",
+			.name           = "LGWXGA13",
 			.refresh        = 60,
 			.xres           = 1366,
 			.yres           = 768,
