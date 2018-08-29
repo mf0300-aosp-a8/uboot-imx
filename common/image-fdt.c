@@ -10,6 +10,7 @@
  *
  * SPDX-License-Identifier:	GPL-2.0+
  */
+#define _DEBUG
 
 #include <common.h>
 #include <fdt_support.h>
@@ -35,6 +36,7 @@ static void fdt_error(const char *msg)
 #if defined(CONFIG_IMAGE_FORMAT_LEGACY)
 static const image_header_t *image_get_fdt(ulong fdt_addr)
 {
+	debug("%s: was called\n", __FUNCTION__);
 	const image_header_t *fdt_hdr = map_sysmem(fdt_addr, 0);
 
 	image_print_contents(fdt_hdr);
@@ -63,6 +65,7 @@ static const image_header_t *image_get_fdt(ulong fdt_addr)
 		fdt_error("uImage data is not a fdt");
 		return NULL;
 	}
+	debug("%s: was left fdt_hdr:%p\n", __FUNCTION__, (ulong)fdt_hdr);
 	return fdt_hdr;
 }
 #endif
@@ -113,6 +116,8 @@ void boot_fdt_add_mem_rsv_regions(struct lmb *lmb, void *fdt_blob)
  */
 int boot_relocate_fdt(struct lmb *lmb, char **of_flat_tree, ulong *of_size)
 {
+	debug("%s: was called\n", __FUNCTION__);
+
 	void	*fdt_blob = *of_flat_tree;
 	void	*of_start = NULL;
 	char	*fdt_high;
@@ -125,7 +130,7 @@ int boot_relocate_fdt(struct lmb *lmb, char **of_flat_tree, ulong *of_size)
 		return 0;
 
 	if (fdt_check_header(fdt_blob) != 0) {
-		fdt_error("image is not a fdt");
+		debug("%s: Image is not a fdt\n", __FUNCTION__);
 		goto error;
 	}
 
@@ -148,7 +153,7 @@ int boot_relocate_fdt(struct lmb *lmb, char **of_flat_tree, ulong *of_size)
 			    (void *)(ulong) lmb_alloc_base(lmb, of_len, 0x1000,
 							   (ulong)desired_addr);
 			if (of_start == NULL) {
-				puts("Failed using fdt_high value for Device Tree");
+				debug("%s: Failed using fdt_high value for Device Tree\n", __FUNCTION__);
 				goto error;
 			}
 		} else {
@@ -163,7 +168,7 @@ int boot_relocate_fdt(struct lmb *lmb, char **of_flat_tree, ulong *of_size)
 	}
 
 	if (of_start == NULL) {
-		puts("device tree - allocation error\n");
+		debug("%s: Device tree - allocation error\n", __FUNCTION__);
 		goto error;
 	}
 
@@ -173,18 +178,18 @@ int boot_relocate_fdt(struct lmb *lmb, char **of_flat_tree, ulong *of_size)
 		 * for padding
 		 */
 		fdt_set_totalsize(of_start, of_len);
-		printf("   Using Device Tree in place at %p, end %p\n",
+		printf("Using Device Tree in place at %p, end %p\n",
 		       of_start, of_start + of_len - 1);
 	} else {
-		debug("## device tree at %p ... %p (len=%ld [0x%lX])\n",
+		printf("## device tree at %p ... %p (len=%ld [0x%lX])\n",
 		      fdt_blob, fdt_blob + *of_size - 1, of_len, of_len);
 
-		printf("   Loading Device Tree to %p, end %p ... ",
+		printf("Loading Device Tree to %p, end %p ... ",
 		       of_start, of_start + of_len - 1);
 
 		err = fdt_open_into(fdt_blob, of_start, of_len);
 		if (err != 0) {
-			fdt_error("fdt move failed");
+			debug("%s: FDT move failed\n", __FUNCTION__);
 			goto error;
 		}
 		puts("OK\n");
@@ -194,9 +199,11 @@ int boot_relocate_fdt(struct lmb *lmb, char **of_flat_tree, ulong *of_size)
 	*of_size = of_len;
 
 	set_working_fdt_addr((ulong)*of_flat_tree);
+	debug("%s: was left return 0 of_start:%p of_len:%u\n", __FUNCTION__, of_start, of_len);
 	return 0;
 
 error:
+	debug("%s: was left return 1\n", __FUNCTION__);
 	return 1;
 }
 
@@ -225,6 +232,7 @@ error:
 int boot_get_fdt(int flag, int argc, char * const argv[], uint8_t arch,
 		bootm_headers_t *images, char **of_flat_tree, ulong *of_size)
 {
+	debug("%s: was called\n", __FUNCTION__);
 #if defined(CONFIG_IMAGE_FORMAT_LEGACY)
 	const image_header_t *fdt_hdr;
 	ulong		load, load_end;
@@ -265,17 +273,17 @@ int boot_get_fdt(int flag, int argc, char * const argv[], uint8_t arch,
 
 			if (fit_parse_conf(select, default_addr,
 					   &fdt_addr, &fit_uname_config)) {
-				debug("*  fdt: config '%s' from image at 0x%08lx\n",
+				printf("*  fdt: config '%s' from image at 0x%08lx\n",
 				      fit_uname_config, fdt_addr);
 			} else if (fit_parse_subimage(select, default_addr,
 				   &fdt_addr, &fit_uname_fdt)) {
-				debug("*  fdt: subimage '%s' from image at 0x%08lx\n",
+				printf("*  fdt: subimage '%s' from image at 0x%08lx\n",
 				      fit_uname_fdt, fdt_addr);
 			} else
 #endif
 			{
 				fdt_addr = simple_strtoul(select, NULL, 16);
-				debug("*  fdt: cmdline image address = 0x%08lx\n",
+				printf("*  fdt: cmdline image address = 0x%08lx\n",
 				      fdt_addr);
 			}
 #if CONFIG_IS_ENABLED(FIT)
@@ -293,7 +301,7 @@ int boot_get_fdt(int flag, int argc, char * const argv[], uint8_t arch,
 				return 1;
 		}
 #endif
-		debug("## Checking for 'FDT'/'FDT Image' at %08lx\n",
+		printf("## Checking for 'FDT'/'FDT Image' at %08lx\n",
 		      fdt_addr);
 
 		/* copy from dataflash if needed */
@@ -337,7 +345,7 @@ int boot_get_fdt(int flag, int argc, char * const argv[], uint8_t arch,
 				goto error;
 			}
 
-			debug("   Loading FDT from 0x%08lx to 0x%08lx\n",
+			printf("   Loading FDT from 0x%08lx to 0x%08lx\n",
 			      image_data, load);
 
 			memmove((void *)load,
@@ -376,7 +384,7 @@ int boot_get_fdt(int flag, int argc, char * const argv[], uint8_t arch,
 				/*
 				 * FDT blob
 				 */
-				debug("*  fdt: raw FDT blob\n");
+				printf("*  fdt: raw FDT blob\n");
 				printf("## Flattened Device Tree blob at %08lx\n",
 				       (long)fdt_addr);
 			}
@@ -416,7 +424,7 @@ int boot_get_fdt(int flag, int argc, char * const argv[], uint8_t arch,
 				goto error;
 			}
 		} else {
-			debug("## No Flattened Device Tree\n");
+			printf("## No Flattened Device Tree\n");
 			goto no_fdt;
 		}
 	}
@@ -441,21 +449,22 @@ int boot_get_fdt(int flag, int argc, char * const argv[], uint8_t arch,
 				goto error;
 			}
 		} else {
-			debug("## No Flattened Device Tree\n");
+			printf("## No Flattened Device Tree\n");
 			goto no_fdt;
 		}
 	}
 #endif
 	else {
-		debug("## No Flattened Device Tree\n");
+		printf("## No Flattened Device Tree\n");
 		goto no_fdt;
 	}
 
 	*of_flat_tree = fdt_blob;
 	*of_size = fdt_totalsize(fdt_blob);
-	debug("   of_flat_tree at 0x%08lx size 0x%08lx\n",
+	printf("   of_flat_tree at 0x%08lx size 0x%08lx\n",
 	      (ulong)*of_flat_tree, *of_size);
 
+	debug("%s: was left return 0\n", __FUNCTION__);
 	return 0;
 
 no_fdt:
@@ -464,9 +473,10 @@ error:
 	*of_flat_tree = NULL;
 	*of_size = 0;
 	if (!select && ok_no_fdt) {
-		debug("Continuing to boot without FDT\n");
+		printf("Continuing to boot without FDT\n");
 		return 0;
 	}
+	debug("%s: was left return 1\n", __FUNCTION__);
 	return 1;
 }
 

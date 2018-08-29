@@ -15,6 +15,7 @@
 
 DECLARE_GLOBAL_DATA_PTR;
 
+#if !defined(CONFIG_FASTBOOT_STORAGE_MMC)
 env_t *env_ptr;
 
 void env_relocate_spec(void)
@@ -33,3 +34,4 @@ int env_init(void)
 
 	return 0;
 }
+#endif

@@ -46,7 +46,9 @@ struct spi_flash *spi_flash_probe(unsigned int bus, unsigned int cs,
 
 void spi_flash_free(struct spi_flash *flash)
 {
+#if defined CONFIG_DM_SPI && defined CONFIG_DM_SPI_FLASH
 	device_remove(flash->spi->dev);
+#endif
 }
 
 int spi_flash_probe_bus_cs(unsigned int busnum, unsigned int cs,
@@ -71,7 +73,9 @@ int spi_flash_probe_bus_cs(unsigned int busnum, unsigned int cs,
 	if (ret)
 		return ret;
 
+#if defined CONFIG_DM_SPI && defined CONFIG_DM_SPI_FLASH
 	*devp = slave->dev;
+#endif
 	return 0;
 }
 

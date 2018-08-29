@@ -1238,6 +1238,7 @@ source "board/freescale/mx53ard/Kconfig"
 source "board/freescale/mx53evk/Kconfig"
 source "board/freescale/mx53loco/Kconfig"
 source "board/freescale/mx53smd/Kconfig"
+source "board/freescale/mx6qmf0300/Kconfig
 source "board/freescale/s32v234evb/Kconfig"
 source "board/freescale/vf610twr/Kconfig"
 source "board/grinn/chiliboard/Kconfig"

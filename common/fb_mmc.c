@@ -34,9 +34,12 @@ struct fb_mmc_sparse {
 static int part_get_info_by_name_or_alias(struct blk_desc *dev_desc,
 		const char *name, disk_partition_t *info)
 {
+	debug("%s: was called name:%s\n", __func__, name);
+
 	int ret;
 
 	ret = part_get_info_by_name(dev_desc, name, info);
+	debug("%s: part_get_info_by_name() return:%d\n", __func__, ret);
 	if (ret) {
 		/* strlen("fastboot_partition_alias_") + 32(part_name) + 1 */
 		char env_alias_name[25 + 32 + 1];
@@ -50,6 +53,8 @@ static int part_get_info_by_name_or_alias(struct blk_desc *dev_desc,
 			ret = part_get_info_by_name(dev_desc,
 					aliased_part_name, info);
 	}
+
+	debug("%s: was left return:%d\n", __func__, ret);
 	return ret;
 }
 
@@ -102,6 +107,8 @@ static void write_raw_image(struct blk_desc *dev_desc, disk_partition_t *info,
 void fb_mmc_flash_write(const char *cmd, void *download_buffer,
 			unsigned int download_bytes)
 {
+	debug("%s: was called\n", __func__);
+
 	struct blk_desc *dev_desc;
 	disk_partition_t info;
 
@@ -110,20 +117,23 @@ void fb_mmc_flash_write(const char *cmd, void *download_buffer,
 		error("invalid mmc device\n");
 		fastboot_fail("invalid mmc device");
 		return;
+	} else {
+		debug("%s: MMC device is OK\n", __func__);
 	}
+
 
 #if CONFIG_IS_ENABLED(EFI_PARTITION)
 	if (strcmp(cmd, CONFIG_FASTBOOT_GPT_NAME) == 0) {
-		printf("%s: updating MBR, Primary and Backup GPT(s)\n",
+		debug("%s: updating MBR, Primary and Backup GPT(s)\n",
 		       __func__);
 		if (is_valid_gpt_buf(dev_desc, download_buffer)) {
-			printf("%s: invalid GPT - refusing to write to flash\n",
+			debug("%s: invalid GPT - refusing to write to flash\n",
 			       __func__);
 			fastboot_fail("invalid GPT partition");
 			return;
 		}
 		if (write_mbr_and_gpt_partitions(dev_desc, download_buffer)) {
-			printf("%s: writing GPT partitions failed\n", __func__);
+			debug("%s: writing GPT partitions failed\n", __func__);
 			fastboot_fail("writing GPT partitions failed");
 			return;
 		}
@@ -135,15 +145,15 @@ void fb_mmc_flash_write(const char *cmd, void *download_buffer,
 
 #if CONFIG_IS_ENABLED(DOS_PARTITION)
 	if (strcmp(cmd, CONFIG_FASTBOOT_MBR_NAME) == 0) {
-		printf("%s: updating MBR\n", __func__);
+		debug("%s: updating MBR\n", __func__);
 		if (is_valid_dos_buf(download_buffer)) {
-			printf("%s: invalid MBR - refusing to write to flash\n",
+			debug("%s: invalid MBR - refusing to write to flash\n",
 			       __func__);
 			fastboot_fail("invalid MBR partition");
 			return;
 		}
 		if (write_mbr_partition(dev_desc, download_buffer)) {
-			printf("%s: writing MBR partition failed\n", __func__);
+			debug("%s: writing MBR partition failed\n", __func__);
 			fastboot_fail("writing MBR partition failed");
 			return;
 		}
@@ -153,6 +163,7 @@ void fb_mmc_flash_write(const char *cmd, void *download_buffer,
 	}
 #endif
 
+	debug("%s: call part_get_info_by_name_or_alias() cmd:%s\n", __func__, cmd);
 	if (part_get_info_by_name_or_alias(dev_desc, cmd, &info)) {
 		error("cannot find partition: '%s'\n", cmd);
 		fastboot_fail("cannot find partition");
@@ -181,6 +192,8 @@ void fb_mmc_flash_write(const char *cmd, void *download_buffer,
 		write_raw_image(dev_desc, &info, cmd, download_buffer,
 				download_bytes);
 	}
+
+	debug("%s: was left\n", __func__);
 }
 
 void fb_mmc_erase(const char *cmd)

@@ -11,6 +11,7 @@
  *
  * SPDX-License-Identifier:	GPL-2.0+
  */
+#define _DEBUG
 
 #include <common.h>
 #include <command.h>
@@ -56,7 +57,7 @@ void arch_lmb_reserve(struct lmb *lmb)
 	 * pointer.
 	 */
 	sp = get_sp();
-	debug("## Current stack ends at 0x%08lx ", sp);
+	printf("## Current stack ends at 0x%08lx ", sp);
 
 	/* adjust sp by 4K to be safe */
 	sp -= 4096;
@@ -75,23 +76,31 @@ __weak void board_quiesce_devices(void)
  */
 static void announce_and_cleanup(int fake)
 {
+	debug("%s:was called\n", __FUNCTION__);
+
 	printf("\nStarting kernel ...%s\n\n", fake ?
 		"(fake run for tracing)" : "");
 	bootstage_mark_name(BOOTSTAGE_ID_BOOTM_HANDOFF, "start_kernel");
 #ifdef CONFIG_BOOTSTAGE_FDT
+	debug("%s:bootstage_fdt_add_report()\n", __FUNCTION__);
 	bootstage_fdt_add_report();
 #endif
 #ifdef CONFIG_BOOTSTAGE_REPORT
+	debug("%s:bootstage_report()\n", __FUNCTION__);
 	bootstage_report();
 #endif
 
 #ifdef CONFIG_USB_DEVICE
+	debug("%s:udc_disconnect()\n", __FUNCTION__);
 	udc_disconnect();
 #endif
 
+	debug("%s:board_quiesce_devices()\n", __FUNCTION__);
 	board_quiesce_devices();
 
+	debug("%s:cleanup_before_linux()\n", __FUNCTION__);
 	cleanup_before_linux();
+	debug("%s:was left\n", __FUNCTION__);
 }
 
 static void setup_start_tag (bd_t *bd)
@@ -206,18 +215,23 @@ static void do_nonsec_virt_switch(void)
 /* Subcommand: PREP */
 static void boot_prep_linux(bootm_headers_t *images)
 {
+	debug("%s:was called\n", __FUNCTION__);
+
 	char *commandline = getenv("bootargs");
 
+	debug("%s:CHECK *** IMAGE_ENABLE_OF_LIBFDT:%u images->ft_len:%u\n", __FUNCTION__, IMAGE_ENABLE_OF_LIBFDT, images->ft_len);
 	if (IMAGE_ENABLE_OF_LIBFDT && images->ft_len) {
+		debug("%s:(IMAGE_ENABLE_OF_LIBFDT && images->ft_len) IMAGE_ENABLE_OF_LIBFDT:%u is true\n", __FUNCTION__, IMAGE_ENABLE_OF_LIBFDT);
 #ifdef CONFIG_OF_LIBFDT
-		debug("using: FDT\n");
+		printf("using: FDT\n");
 		if (image_setup_linux(images)) {
 			printf("FDT creation failed! hanging...");
 			hang();
 		}
 #endif
 	} else if (BOOTM_ENABLE_TAGS) {
-		debug("using: ATAGS\n");
+		debug("%s:(IMAGE_ENABLE_OF_LIBFDT && images->ft_len) is false\n", __FUNCTION__);
+		printf("using: ATAGS\n");
 		setup_start_tag(gd->bd);
 		if (BOOTM_ENABLE_SERIAL_TAG)
 			setup_serial_tag(&params);
@@ -249,6 +263,7 @@ static void boot_prep_linux(bootm_headers_t *images)
 		printf("FDT and ATAGS support not compiled in - hanging\n");
 		hang();
 	}
+	debug("%s:was left\n", __FUNCTION__);
 }
 
 __weak bool armv7_boot_nonsec_default(void)
@@ -301,6 +316,7 @@ static void switch_to_el1(void)
 /* Subcommand: GO */
 static void boot_jump_linux(bootm_headers_t *images, int flag)
 {
+	printf("    %s: was called\n", __FUNCTION__);
 #ifdef CONFIG_ARM64
 	void (*kernel_entry)(void *fdt_addr, void *res0, void *res1,
 			void *res2);
@@ -309,7 +325,7 @@ static void boot_jump_linux(bootm_headers_t *images, int flag)
 	kernel_entry = (void (*)(void *fdt_addr, void *res0, void *res1,
 				void *res2))images->ep;
 
-	debug("## Transferring control to Linux (at address %lx)...\n",
+	printf("## Transferring control to Linux (at address %lx)...\n",
 		(ulong) kernel_entry);
 	bootstage_mark(BOOTSTAGE_ID_RUN_OS);
 
@@ -318,7 +334,7 @@ static void boot_jump_linux(bootm_headers_t *images, int flag)
 	if (!fake) {
 #ifdef CONFIG_ARMV8_PSCI
 		armv8_setup_psci();
-#endif
+#endif  // CONFIG_ARMV8_PSCI
 		do_nonsec_virt_switch();
 
 		update_os_arch_secondary_cores(images->os.arch);
@@ -337,9 +353,9 @@ static void boot_jump_linux(bootm_headers_t *images, int flag)
 			armv8_switch_to_el2((u64)images->ft_addr, 0, 0, 0,
 					    images->ep,
 					    ES_TO_AARCH64);
-#endif
+#endif // CONFIG_ARMV8_SWITCH_TO_EL1
 	}
-#else
+#else // CONFIG_ARM64
 	unsigned long machid = gd->bd->bi_arch_number;
 	char *s;
 	void (*kernel_entry)(int zero, int arch, uint params);
@@ -351,23 +367,28 @@ static void boot_jump_linux(bootm_headers_t *images, int flag)
 	s = getenv("machid");
 	if (s) {
 		if (strict_strtoul(s, 16, &machid) < 0) {
-			debug("strict_strtoul failed!\n");
+			printf("strict_strtoul failed!\n");
 			return;
 		}
 		printf("Using machid 0x%lx from environment\n", machid);
 	}
 
-	debug("## Transferring control to Linux (at address %08lx)" \
+	printf("## Transferring control to Linux (at address %08lx)" \
 		"...\n", (ulong) kernel_entry);
 	bootstage_mark(BOOTSTAGE_ID_RUN_OS);
 	announce_and_cleanup(fake);
 
-	if (IMAGE_ENABLE_OF_LIBFDT && images->ft_len)
+	printf("    %s: IMAGE_ENABLE_OF_LIBFDT:%u images->ft_len:%u\n", __FUNCTION__, IMAGE_ENABLE_OF_LIBFDT, images->ft_len);
+	if (IMAGE_ENABLE_OF_LIBFDT && images->ft_len) {
 		r2 = (unsigned long)images->ft_addr;
-	else
+	}
+	else {
 		r2 = gd->bd->bi_boot_params;
+	}
+	printf("    %s: r2:%p\n", __FUNCTION__, r2);
 
 	if (!fake) {
+		printf("    %s: Because it is not fake\n", __FUNCTION__);
 #ifdef CONFIG_ARMV7_NONSEC
 		if (armv7_boot_nonsec()) {
 			armv7_init_nonsec();
@@ -375,9 +396,10 @@ static void boot_jump_linux(bootm_headers_t *images, int flag)
 							  0, machid, r2);
 		} else
 #endif
+			printf("    %s: kernel_entry(0, %s, %p)\n", __FUNCTION__, machid, (ulong)r2);
 			kernel_entry(0, machid, r2);
 	}
-#endif
+#endif // CONFIG_ARM64
 }
 
 /* Main Entry point for arm bootm implementation

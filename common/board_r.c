@@ -96,6 +96,7 @@ __weak void cpu_secondary_init_r(void)
 
 static int initr_secondary_cpu(void)
 {
+	debug("%s: was called\n", __FUNCTION__);
 	/*
 	 * after non-volatile devices & environment is setup and cpu code have
 	 * another round to deal with any initialization that might require
@@ -105,15 +106,18 @@ static int initr_secondary_cpu(void)
 	/* TODO: maybe define this for all archs? */
 	cpu_secondary_init_r();
 
+	debug("%s: was left\n", __FUNCTION__);
 	return 0;
 }
 
 static int initr_trace(void)
 {
+	debug("%s: was called\n", __FUNCTION__);
 #ifdef CONFIG_TRACE
 	trace_init(gd->trace_buff, CONFIG_TRACE_BUFFER_SIZE);
 #endif
 
+	debug("%s: was left\n", __FUNCTION__);
 	return 0;
 }
 
@@ -132,8 +136,10 @@ static int initr_reloc(void)
  */
 static int initr_caches(void)
 {
+	debug("%s: was called\n", __FUNCTION__);
 	/* Enable caches */
 	enable_caches();
+	debug("%s: was left\n", __FUNCTION__);
 	return 0;
 }
 #endif
@@ -192,13 +198,16 @@ static int initr_reloc_global_data(void)
 
 static int initr_serial(void)
 {
+	debug("%s: was called\n", __FUNCTION__);
 	serial_initialize();
+	debug("%s: was left\n", __FUNCTION__);
 	return 0;
 }
 
 #if defined(CONFIG_PPC) || defined(CONFIG_M68K) || defined(CONFIG_MIPS)
 static int initr_trap(void)
 {
+	debug("%s: was called\n", __FUNCTION__);
 	/*
 	 * Setup trap handlers
 	 */
@@ -207,6 +216,8 @@ static int initr_trap(void)
 #else
 	trap_init(CONFIG_SYS_SDRAM_BASE);
 #endif
+
+	debug("%s: was left\n", __FUNCTION__);
 	return 0;
 }
 #endif
@@ -214,8 +225,9 @@ static int initr_trap(void)
 #ifdef CONFIG_ADDR_MAP
 static int initr_addr_map(void)
 {
+	debug("%s: was called\n", __FUNCTION__);
 	init_addr_map();
-
+	debug("%s: was left\n", __FUNCTION__);
 	return 0;
 }
 #endif
@@ -259,10 +271,12 @@ static int initr_unlock_ram_in_cache(void)
 #ifdef CONFIG_PCI
 static int initr_pci(void)
 {
+	debug("%s: was called\n", __FUNCTION__);
 #ifndef CONFIG_DM_PCI
 	pci_init();
 #endif
 
+	debug("%s: was left\n", __FUNCTION__);
 	return 0;
 }
 #endif
@@ -313,6 +327,7 @@ static int initr_dm(void)
 {
 	int ret;
 
+	debug("%s: was called\n", __FUNCTION__);
 	/* Save the pre-reloc driver model and start a new one */
 	gd->dm_root_f = gd->dm_root;
 	gd->dm_root = NULL;
@@ -324,19 +339,24 @@ static int initr_dm(void)
 		return ret;
 #ifdef CONFIG_TIMER_EARLY
 	ret = dm_timer_init();
-	if (ret)
+	if (ret) {
+		debug("%s: was left ret:%d\n", __FUNCTION__, ret);
 		return ret;
+	}
 #endif
 
+	debug("%s: was left ret:0\n", __FUNCTION__);
 	return 0;
 }
 #endif
 
 static int initr_bootstage(void)
 {
+	debug("%s: was called\n", __FUNCTION__);
 	/* We cannot do this before initr_dm() */
 	bootstage_mark_name(BOOTSTAGE_ID_START_UBOOT_R, "board_init_r");
 
+	debug("%s: was left\n", __FUNCTION__);
 	return 0;
 }
 
@@ -347,7 +367,9 @@ __weak int power_init_board(void)
 
 static int initr_announce(void)
 {
-	debug("Now running in RAM - U-Boot at: %08lx\n", gd->relocaddr);
+	debug("%s: was called\n", __FUNCTION__);
+	printf("Now running in RAM - U-Boot at: %08lx\n", gd->relocaddr);
+	debug("%s: was left\n", __FUNCTION__);
 	return 0;
 }
 
@@ -363,6 +385,7 @@ static int initr_manual_reloc_cmdtable(void)
 #if defined(CONFIG_MTD_NOR_FLASH)
 static int initr_flash(void)
 {
+	debug("%s: was called\n", __FUNCTION__);
 	ulong flash_size = 0;
 	bd_t *bd = gd->bd;
 
@@ -407,6 +430,7 @@ static int initr_flash(void)
 #elif CONFIG_SYS_MONITOR_BASE == CONFIG_SYS_FLASH_BASE
 	bd->bi_flashoffset = monitor_flash_len;	/* reserved area for monitor */
 #endif
+	debug("%s: was left\n", __FUNCTION__);
 	return 0;
 }
 #endif
@@ -414,6 +438,7 @@ static int initr_flash(void)
 #if defined(CONFIG_PPC) && !defined(CONFIG_DM_SPI)
 static int initr_spi(void)
 {
+	debug("%s: was called\n", __FUNCTION__);
 	/* PPC does this here */
 #ifdef CONFIG_SPI
 #if !defined(CONFIG_ENV_IS_IN_EEPROM)
@@ -421,6 +446,8 @@ static int initr_spi(void)
 #endif
 	spi_init_r();
 #endif
+
+	debug("%s: was left\n", __FUNCTION__);
 	return 0;
 }
 #endif
@@ -429,8 +456,10 @@ static int initr_spi(void)
 /* go init the NAND */
 static int initr_nand(void)
 {
+	debug("%s: was called\n", __FUNCTION__);
 	puts("NAND:  ");
 	nand_init();
+	debug("%s: was left\n", __FUNCTION__);
 	return 0;
 }
 #endif
@@ -439,8 +468,10 @@ static int initr_nand(void)
 /* go init the NAND */
 static int initr_onenand(void)
 {
+	debug("%s: was called\n", __FUNCTION__);
 	puts("NAND:  ");
 	onenand_init();
+	debug("%s: was left\n", __FUNCTION__);
 	return 0;
 }
 #endif
@@ -448,8 +479,10 @@ static int initr_onenand(void)
 #ifdef CONFIG_GENERIC_MMC
 static int initr_mmc(void)
 {
+	debug("%s: was called\n", __FUNCTION__);
 	puts("MMC:   ");
 	mmc_initialize(gd->bd);
+	debug("%s: was left\n", __FUNCTION__);
 	return 0;
 }
 #endif
@@ -487,6 +520,7 @@ static int should_load_env(void)
 
 static int initr_env(void)
 {
+	debug("%s: was called\n", __FUNCTION__);
 	/* initialize environment */
 	if (should_load_env())
 		env_relocate();
@@ -516,17 +550,20 @@ static int initr_env(void)
 #endif /* CONFIG_I2CFAST */
 #endif /* CONFIG_405GP, CONFIG_405EP */
 #endif /* CONFIG_SYS_EXTBDINFO */
+	debug("%s: was left\n", __FUNCTION__);
 	return 0;
 }
 
 #ifdef CONFIG_SYS_BOOTPARAMS_LEN
 static int initr_malloc_bootparams(void)
 {
+	debug("%s: was called\n", __FUNCTION__);
 	gd->bd->bi_boot_params = (ulong)malloc(CONFIG_SYS_BOOTPARAMS_LEN);
 	if (!gd->bd->bi_boot_params) {
 		puts("WARNING: Cannot allocate space for boot parameters\n");
 		return -ENOMEM;
 	}
+	debug("%s: was left\n", __FUNCTION__);
 	return 0;
 }
 #endif
@@ -540,8 +577,10 @@ static int initr_jumptable(void)
 #if defined(CONFIG_API)
 static int initr_api(void)
 {
+	debug("%s: was called\n", __FUNCTION__);
 	/* Initialize API */
 	api_init();
+	debug("%s: was left\n", __FUNCTION__);
 	return 0;
 }
 #endif
@@ -550,7 +589,9 @@ static int initr_api(void)
 #if defined(CONFIG_ARM) || defined(CONFIG_AVR32)
 static int initr_enable_interrupts(void)
 {
+	debug("%s: was called\n", __FUNCTION__);
 	enable_interrupts();
+	debug("%s: was left\n", __FUNCTION__);
 	return 0;
 }
 #endif
@@ -558,6 +599,7 @@ static int initr_enable_interrupts(void)
 #ifdef CONFIG_CMD_NET
 static int initr_ethaddr(void)
 {
+	debug("%s: was called\n", __FUNCTION__);
 	bd_t *bd = gd->bd;
 
 	/* kept around for legacy kernels only ... ignore the next section */
@@ -577,6 +619,8 @@ static int initr_ethaddr(void)
 #ifdef CONFIG_HAS_ETH5
 	eth_getenv_enetaddr("eth5addr", bd->bi_enet5addr);
 #endif
+
+	debug("%s: was left\n", __FUNCTION__);
 	return 0;
 }
 #endif /* CONFIG_CMD_NET */
@@ -593,11 +637,13 @@ static int initr_kgdb(void)
 #if defined(CONFIG_LED_STATUS)
 static int initr_status_led(void)
 {
+	debug("%s: was called\n", __FUNCTION__);
 #if defined(CONFIG_LED_STATUS_BOOT)
 	status_led_set(CONFIG_LED_STATUS_BOOT, CONFIG_LED_STATUS_BLINKING);
 #else
 	status_led_init();
 #endif
+	debug("%s: was left\n", __FUNCTION__);
 	return 0;
 }
 #endif
@@ -687,6 +733,7 @@ static int initr_ide(void)
  */
 int initr_mem(void)
 {
+	debug("%s: was called\n", __FUNCTION__);
 	ulong pram = 0;
 	char memsz[32];
 
@@ -700,6 +747,7 @@ int initr_mem(void)
 	sprintf(memsz, "%ldk", (long int) ((gd->ram_size / 1024) - pram));
 	setenv("mem", memsz);
 
+	debug("%s: was left\n", __FUNCTION__);
 	return 0;
 }
 #endif
@@ -725,25 +773,31 @@ static int initr_kbd(void)
 #ifdef CONFIG_FSL_FASTBOOT
 static int initr_fastboot_setup(void)
 {
+	debug("%s: was called\n", __FUNCTION__);
 	fastboot_setup();
+	debug("%s: was left\n", __FUNCTION__);
 	return 0;
 }
 
 static int initr_check_fastboot(void)
 {
+	debug("%s: was called\n", __FUNCTION__);
 	fastboot_run_bootmode();
+	debug("%s: was left\n", __FUNCTION__);
 	return 0;
 }
 #endif
 
 static int run_main_loop(void)
 {
+	debug("%s: was called\n", __FUNCTION__);
 #ifdef CONFIG_SANDBOX
 	sandbox_main_loop_init();
 #endif
 	/* main_loop() can return to retry autoboot, if so just run it again */
 	for (;;)
 		main_loop();
+	debug("%s: was left\n", __FUNCTION__);
 	return 0;
 }
 

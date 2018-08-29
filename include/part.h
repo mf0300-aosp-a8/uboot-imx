@@ -47,21 +47,22 @@ struct block_drvr {
 #define DEV_TYPE_OPDISK		0x07	/* optical disk */
 
 typedef struct disk_partition {
-	lbaint_t	start;	/* # of first block in partition	*/
-	lbaint_t	size;	/* number of blocks in partition	*/
-	ulong	blksz;		/* block size in bytes			*/
-	uchar	name[32];	/* partition name			*/
-	uchar	type[32];	/* string type description		*/
-	int	bootable;	/* Active/Bootable flag is set		*/
+	lbaint_t	start;		/* # of first block in partition	*/
+	lbaint_t	size;		/* number of blocks in partition	*/
+	ulong		blksz;		/* block size in bytes			*/
+	uchar		name[32];	/* partition name			*/
+	uchar		type[32];	/* string type description		*/
+	int			bootable;	/* Active/Bootable flag is set		*/
 #if CONFIG_IS_ENABLED(PARTITION_UUIDS)
-	char	uuid[37];	/* filesystem UUID as string, if exists	*/
+	uchar		uuid[37];	/* filesystem UUID as string, if exists	*/
 #endif
 #ifdef CONFIG_PARTITION_TYPE_GUID
-	char	type_guid[37];	/* type GUID as string, if exists	*/
+	uchar		type_guid[37];	/* type GUID as string, if exists	*/
 #endif
 #ifdef CONFIG_DOS_PARTITION
-	uchar	sys_ind;	/* partition type 			*/
+	uchar		sys_ind;	/* partition type 			*/
 #endif
+	uchar		drv_name[9];/* driver name as string, if exists	*/
 } disk_partition_t;
 
 /* Misc _get_dev functions */
@@ -80,7 +81,6 @@ typedef struct disk_partition {
  *	   error occurred.
  */
 struct blk_desc *blk_get_dev(const char *ifname, int dev);
-
 struct blk_desc *mg_disk_get_dev(int dev);
 struct blk_desc *sata_get_dev(int dev);
 int host_get_dev_err(int dev, struct blk_desc **blk_devp);

@@ -110,10 +110,14 @@
 #endif
 
 /*
+ * Define params before include splash.h
+ */
+#define CONFIG_HIDE_LOGO_VERSION
+
+/*
  * Include video_fb.h after definitions of VIDEO_HW_RECTFILL etc.
  */
 #include <video_fb.h>
-
 #include <splash.h>
 
 /*
@@ -161,12 +165,27 @@ void console_cursor(int state);
 
 #ifdef	CONFIG_VIDEO_LOGO
 #ifdef	CONFIG_VIDEO_BMP_LOGO
+
+/* check for logo size, depends on screen size */
+#define CAT_HELPER(lhs, rhs) lhs##rhs
+#define CAT(lhs, rhs) CAT_HELPER(lhs, rhs)
+#define TEST_PREFIX_LGWXGA13 1
+#if CAT(TEST_PREFIX_, CONFIG_DEFAULT_PANEL)
+#warning "*** WXGA ***"
 #include <bmp_logo.h>
 #include <bmp_logo_data.h>
-#define VIDEO_LOGO_WIDTH	BMP_LOGO_WIDTH
-#define VIDEO_LOGO_HEIGHT	BMP_LOGO_HEIGHT
+#else
+#warning "*** XGA  ***"
+#include <bmp_logo_xga.h>
+#include <bmp_logo_data_xga.h>
+#endif
+#undef CAT
+#undef CAT_HELPER
+
+#define VIDEO_LOGO_WIDTH		BMP_LOGO_WIDTH
+#define VIDEO_LOGO_HEIGHT		BMP_LOGO_HEIGHT
 #define VIDEO_LOGO_LUT_OFFSET	BMP_LOGO_OFFSET
-#define VIDEO_LOGO_COLORS	BMP_LOGO_COLORS
+#define VIDEO_LOGO_COLORS		BMP_LOGO_COLORS
 
 #else  /* CONFIG_VIDEO_BMP_LOGO */
 #define LINUX_LOGO_WIDTH	80
@@ -1707,6 +1726,7 @@ static void plot_logo_or_black(void *screen, int x, int y, int black);
 
 static void logo_plot(void *screen, int x, int y)
 {
+	printf("%s: call plot_logo_or_black x:%d y:%d\n", __func__, x, y);
 	plot_logo_or_black(screen, x, y, 0);
 }
 
@@ -1731,9 +1751,96 @@ U_BOOT_CMD(
 	   " "
 	   );
 
+static void fill_screen_with_logo_color(void *screen) {
+	unsigned char r, g, b, *logo_red, *logo_blue, *logo_green;
+	unsigned char *source;
+	unsigned char *dest;
+	int xcount, i;
+	int ycount = VIDEO_VISIBLE_ROWS;
+
+	dest = (unsigned char *)screen;
+
+#ifdef CONFIG_VIDEO_BMP_LOGO
+	source = bmp_logo_bitmap;
+
+	/* Allocate temporary space for computing colormap */
+	logo_red = malloc(BMP_LOGO_COLORS);
+	logo_green = malloc(BMP_LOGO_COLORS);
+	logo_blue = malloc(BMP_LOGO_COLORS);
+	/* Compute color map */
+	for (i = 0; i < VIDEO_LOGO_COLORS; i++) {
+		logo_red[i] = (bmp_logo_palette[i] & 0x0f00) >> 4;
+		logo_green[i] = (bmp_logo_palette[i] & 0x00f0);
+		logo_blue[i] = (bmp_logo_palette[i] & 0x000f) << 4;
+	}
+#else
+	source = linux_logo;
+	logo_red = linux_logo_red;
+	logo_green = linux_logo_green;
+	logo_blue = linux_logo_blue;
+#endif
+
+	while (ycount--) {
+		xcount = VIDEO_VISIBLE_COLS;
+		while (xcount--) {
+			r = logo_red[*source - VIDEO_LOGO_LUT_OFFSET];
+			g = logo_green[*source - VIDEO_LOGO_LUT_OFFSET];
+			b = logo_blue[*source - VIDEO_LOGO_LUT_OFFSET];
+
+			switch (VIDEO_DATA_FORMAT) {
+			case GDF__8BIT_INDEX:
+				*dest = *source;
+				break;
+			case GDF__8BIT_332RGB:
+				*dest = ((r >> 5) << 5) |
+					((g >> 5) << 2) |
+					 (b >> 6);
+				break;
+			case GDF_15BIT_555RGB:
+				*(unsigned short *) dest =
+					SWAP16((unsigned short) (
+							((r >> 3) << 10) |
+							((g >> 3) <<  5) |
+							 (b >> 3)));
+				break;
+			case GDF_16BIT_565RGB:
+				*(unsigned short *) dest =
+					SWAP16((unsigned short) (
+							((r >> 3) << 11) |
+							((g >> 2) <<  5) |
+							 (b >> 3)));
+				break;
+			case GDF_32BIT_X888RGB:
+				*(unsigned long *) dest =
+					SWAP32((unsigned long) (
+							(r << 16) |
+							(g <<  8) |
+							 b));
+				break;
+			case GDF_24BIT_888RGB:
+#ifdef VIDEO_FB_LITTLE_ENDIAN
+				dest[0] = b;
+				dest[1] = g;
+				dest[2] = r;
+#else
+				dest[0] = r;
+				dest[1] = g;
+				dest[2] = b;
+#endif
+				break;
+			}
+			dest += VIDEO_PIXEL_SIZE;
+		}
+	}
+#ifdef CONFIG_VIDEO_BMP_LOGO
+	free(logo_red);
+	free(logo_green);
+	free(logo_blue);
+#endif
+}
+
 static void plot_logo_or_black(void *screen, int x, int y, int black)
 {
-
 	int xcount, i;
 	int skip = VIDEO_LINE_LEN - VIDEO_LOGO_WIDTH * VIDEO_PIXEL_SIZE;
 	int ycount = video_logo_height;
@@ -1741,16 +1848,19 @@ static void plot_logo_or_black(void *screen, int x, int y, int black)
 	unsigned char *source;
 	unsigned char *dest;
 
+	fill_screen_with_logo_color(video_fb_address);
+
 #ifdef CONFIG_SPLASH_SCREEN_ALIGN
+	printf("%s: LOGO PRE X:%d Y:%d BLACK:%d\n", __func__, x, y, black);
 	if (x == BMP_ALIGN_CENTER)
 		x = max(0, (int)(VIDEO_VISIBLE_COLS - VIDEO_LOGO_WIDTH) / 2);
 	else if (x < 0)
 		x = max(0, (int)(VIDEO_VISIBLE_COLS - VIDEO_LOGO_WIDTH + x + 1));
-
 	if (y == BMP_ALIGN_CENTER)
 		y = max(0, (int)(VIDEO_VISIBLE_ROWS - VIDEO_LOGO_HEIGHT) / 2);
 	else if (y < 0)
 		y = max(0, (int)(VIDEO_VISIBLE_ROWS - VIDEO_LOGO_HEIGHT + y + 1));
+	printf("%s: LOGO POST X:%d Y:%d BLACK:%d\n", __func__, x, y, black);
 #endif /* CONFIG_SPLASH_SCREEN_ALIGN */
 
 	dest = (unsigned char *)screen + y * VIDEO_LINE_LEN + x * VIDEO_PIXEL_SIZE;
@@ -1859,13 +1969,19 @@ static void plot_logo_or_black(void *screen, int x, int y, int black)
 
 static void *video_logo(void)
 {
+	printf("%s: enter\n", __func__);
+
 	char info[128];
 	__maybe_unused int y_off = 0;
 	__maybe_unused ulong addr;
 	__maybe_unused char *s;
 	__maybe_unused int len, ret, space;
 
+	// Always display logo at center of screen
+#ifdef CONFIG_SPLASH_SCREEN_ALIGN
 	splash_get_pos(&video_logo_xpos, &video_logo_ypos);
+#endif
+	printf("%s: splash_get_pos X:%d Y:%d\n", __func__, video_logo_xpos, video_logo_ypos);
 
 #ifdef CONFIG_SPLASH_SCREEN
 	s = getenv("splashimage");
@@ -1884,6 +2000,7 @@ static void *video_logo(void)
 	}
 #endif /* CONFIG_SPLASH_SCREEN */
 
+	printf("%s: logo_plot X:%d Y:%d\n", __func__, video_logo_xpos, video_logo_ypos);
 	logo_plot(video_fb_address, video_logo_xpos, video_logo_ypos);
 
 #ifdef CONFIG_SPLASH_SCREEN_ALIGN
@@ -1909,9 +2026,8 @@ static void *video_logo(void)
 	if (board_cfb_skip())
 		return 0;
 
-	sprintf(info, " %s", version_string);
-
 #ifndef CONFIG_HIDE_LOGO_VERSION
+	sprintf(info, " %s", version_string);
 	space = (VIDEO_COLS - VIDEO_INFO_X) / VIDEO_FONT_WIDTH;
 	len = strlen(info);
 
@@ -2038,9 +2154,15 @@ static int cfg_video_init(void)
 	/* Init drawing pats */
 	switch (VIDEO_DATA_FORMAT) {
 	case GDF__8BIT_INDEX:
+	#ifndef CONFIG_SYS_CONSOLE_FG_COL
+		#define CONFIG_SYS_CONSOLE_FG_COL CONSOLE_FG_COL
+	#endif
 		video_set_lut(0x01, CONFIG_SYS_CONSOLE_FG_COL,
 			      CONFIG_SYS_CONSOLE_FG_COL,
 			      CONFIG_SYS_CONSOLE_FG_COL);
+	#ifndef CONFIG_SYS_CONSOLE_BG_COL
+		#define CONFIG_SYS_CONSOLE_BG_COL CONSOLE_BG_COL
+	#endif
 		video_set_lut(0x00, CONFIG_SYS_CONSOLE_BG_COL,
 			      CONFIG_SYS_CONSOLE_BG_COL,
 			      CONFIG_SYS_CONSOLE_BG_COL);

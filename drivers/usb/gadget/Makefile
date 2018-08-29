@@ -13,6 +13,13 @@ obj-$(CONFIG_SPL_USB_GADGET_SUPPORT) += g_dnl.o
 obj-$(CONFIG_SPL_DFU_SUPPORT) += f_dfu.o
 endif
 
+ifdef CONFIG_TARGET_MX6QMF0300
+obj-y += g_dnl.o
+obj-y += f_dfu.o
+obj-y += f_mass_storage.o
+obj-y += f_fastboot.o
+endif
+
 # new USB gadget layer dependencies
 ifdef CONFIG_USB_GADGET
 obj-$(CONFIG_USB_GADGET_AT91) += at91_udc.o

@@ -15,6 +15,10 @@ obj-y += spi.o
 obj-$(CONFIG_SOFT_SPI) += soft_spi_legacy.o
 endif
 
+ifdef CONFIG_TARGET_MX6QMF0300
+obj-y += spi-uclass.o
+endif
+
 obj-$(CONFIG_ALTERA_SPI) += altera_spi.o
 obj-$(CONFIG_ATH79_SPI) += ath79_spi.o
 obj-$(CONFIG_ATMEL_DATAFLASH_SPI) += atmel_dataflash_spi.o

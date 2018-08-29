@@ -60,23 +60,9 @@ __weak int splash_screen_prepare(void)
 #ifdef CONFIG_SPLASH_SCREEN_ALIGN
 void splash_get_pos(int *x, int *y)
 {
-	char *s = getenv("splashpos");
-
-	if (!s)
-		return;
-
-	if (s[0] == 'm')
-		*x = BMP_ALIGN_CENTER;
-	else
-		*x = simple_strtol(s, NULL, 0);
-
-	s = strchr(s + 1, ',');
-	if (s != NULL) {
-		if (s[1] == 'm')
-			*y = BMP_ALIGN_CENTER;
-		else
-			*y = simple_strtol(s + 1, NULL, 0);
-	}
+	printf("%s: enter BMP_ALIGN_CENTER:%d\n", __func__, BMP_ALIGN_CENTER);
+	*x = BMP_ALIGN_CENTER;
+	*y = BMP_ALIGN_CENTER;
 }
 #endif /* CONFIG_SPLASH_SCREEN_ALIGN */
 

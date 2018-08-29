@@ -18,6 +18,7 @@
 
 int pmic_reg_write(struct pmic *p, u32 reg, u32 val)
 {
+#ifdef CONFIG_SYS_I2C_MXC
 	unsigned char buf[4] = { 0 };
 
 	if (check_reg(p, reg))
@@ -55,10 +56,14 @@ int pmic_reg_write(struct pmic *p, u32 reg, u32 val)
 	}
 
 	return i2c_write(pmic_i2c_addr, reg, 1, buf, pmic_i2c_tx_num);
+#else
+	return -EINVAL;
+#endif
 }
 
 int pmic_reg_read(struct pmic *p, u32 reg, u32 *val)
 {
+#ifdef CONFIG_SYS_I2C_MXC
 	unsigned char buf[4] = { 0 };
 	u32 ret_val = 0;
 	int ret;
@@ -97,16 +102,21 @@ int pmic_reg_read(struct pmic *p, u32 reg, u32 *val)
 	memcpy(val, &ret_val, sizeof(ret_val));
 
 	return 0;
+#else
+	return -EINVAL;
+#endif
 }
 
 int pmic_probe(struct pmic *p)
 {
+#ifdef CONFIG_SYS_I2C_MXC
 	i2c_set_bus_num(p->bus);
 	debug("Bus: %d PMIC:%s probed!\n", p->bus, p->name);
 	if (i2c_probe(pmic_i2c_addr)) {
 		printf("Can't find PMIC:%s\n", p->name);
 		return -ENODEV;
 	}
+#endif // CONFIG_SYS_I2C_MXC
 
 	return 0;
 }

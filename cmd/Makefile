@@ -12,6 +12,11 @@ obj-$(CONFIG_CMD_BOOTM) += bootm.o
 obj-y += help.o
 obj-y += version.o
 
+ifdef CONFIG_TARGET_MX6QMF0300
+obj-y += fdt.o
+obj-y += gpt.o
+endif
+
 # command
 obj-$(CONFIG_CMD_AES) += aes.o
 obj-$(CONFIG_CMD_AMBAPP) += ambapp.o

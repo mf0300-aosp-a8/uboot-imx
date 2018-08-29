@@ -8,12 +8,13 @@
 #ifndef __COMMON_H_
 #define __COMMON_H_	1
 
-#ifndef __ASSEMBLY__		/* put C only stuff in this section */
+/* put C only stuff in this section */
+#ifndef __ASSEMBLY__
 
-typedef unsigned char		uchar;
+typedef unsigned char uchar;
 typedef volatile unsigned long	vu_long;
 typedef volatile unsigned short vu_short;
-typedef volatile unsigned char	vu_char;
+typedef volatile unsigned char	vu_uchar;
 
 /* Allow sharing constants with type modifiers between C and assembly. */
 #define _AC(X, Y)       (X##Y)
@@ -88,6 +89,11 @@ typedef volatile unsigned char	vu_char;
 #ifdef CONFIG_FSL_LSCH2
 #include <asm/arch/immap_lsch2.h>
 #endif
+
+typedef unsigned char uchar;
+typedef volatile unsigned long  vu_long;
+typedef volatile unsigned short vu_short;
+typedef volatile unsigned char  vu_uchar;
 
 #include <part.h>
 #include <flash.h>

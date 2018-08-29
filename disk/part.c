@@ -13,35 +13,31 @@
 #include <part.h>
 #include <ubifs_uboot.h>
 
-#undef	PART_DEBUG
-
-#ifdef	PART_DEBUG
-#define	PRINTF(fmt,args...)	printf (fmt ,##args)
-#else
-#define PRINTF(fmt,args...)
-#endif
+#define HAVE_BLOCK_DEVICE
+#define PART_DEBUG
 
 DECLARE_GLOBAL_DATA_PTR;
 
 #ifdef HAVE_BLOCK_DEVICE
 static struct part_driver *part_driver_lookup_type(int part_type)
 {
-	struct part_driver *drv =
-		ll_entry_start(struct part_driver, part_driver);
+	struct part_driver *drv = ll_entry_start(struct part_driver, part_driver);
 	const int n_ents = ll_entry_count(struct part_driver, part_driver);
 	struct part_driver *entry;
 
 	for (entry = drv; entry != drv + n_ents; entry++) {
-		if (part_type == entry->part_type)
+		if (part_type == entry->part_type) {
 			return entry;
+		}
 	}
-
 	/* Not found */
 	return NULL;
 }
 
 static struct blk_desc *get_dev_hwpart(const char *ifname, int dev, int hwpart)
 {
+	debug("%s: was called\n", __func__);
+
 	struct blk_desc *dev_desc;
 	int ret;
 
@@ -58,6 +54,7 @@ static struct blk_desc *get_dev_hwpart(const char *ifname, int dev, int hwpart)
 		return NULL;
 	}
 
+	debug("%s: was left\n", __func__);
 	return dev_desc;
 }
 
@@ -75,7 +72,7 @@ struct blk_desc *blk_get_dev(const char *ifname, int dev)
 {
 	return NULL;
 }
-#endif
+#endif // HAVE_BLOCK_DEVICE
 
 #ifdef HAVE_BLOCK_DEVICE
 
@@ -212,11 +209,13 @@ void dev_print (struct blk_desc *dev_desc)
 
 void part_init(struct blk_desc *dev_desc)
 {
-	struct part_driver *drv =
-		ll_entry_start(struct part_driver, part_driver);
+	debug("%s: was called\n", __func__);
+
+	struct part_driver *drv = ll_entry_start(struct part_driver, part_driver);
 	const int n_ents = ll_entry_count(struct part_driver, part_driver);
 	struct part_driver *entry;
 
+	debug("%s: blkcache_invalidate(dev_desc->if_type, dev_desc->devnum)\n", __func__);
 	blkcache_invalidate(dev_desc->if_type, dev_desc->devnum);
 
 	dev_desc->part_type = PART_TYPE_UNKNOWN;
@@ -230,6 +229,8 @@ void part_init(struct blk_desc *dev_desc)
 			break;
 		}
 	}
+
+	debug("%s: was left\n", __func__);
 }
 
 static void print_part_header(const char *type, struct blk_desc *dev_desc)
@@ -285,7 +286,7 @@ void part_print(struct blk_desc *dev_desc)
 		return;
 	}
 
-	PRINTF("## Testing for valid %s partition ##\n", drv->name);
+	printf("## Testing for valid %s partition ##\n", drv->name);
 	print_part_header(drv->name, dev_desc);
 	if (drv->print)
 		drv->print(dev_desc);
@@ -293,43 +294,45 @@ void part_print(struct blk_desc *dev_desc)
 
 #endif /* HAVE_BLOCK_DEVICE */
 
-int part_get_info(struct blk_desc *dev_desc, int part,
-		       disk_partition_t *info)
+int part_get_info(struct blk_desc *dev_desc, int part, disk_partition_t *info)
 {
 #ifdef HAVE_BLOCK_DEVICE
 	struct part_driver *drv;
 
 #if CONFIG_IS_ENABLED(PARTITION_UUIDS)
 	/* The common case is no UUID support */
-	info->uuid[0] = 0;
-#endif
-#ifdef CONFIG_PARTITION_TYPE_GUID
-	info->type_guid[0] = 0;
+	memset(info->uuid, 0, sizeof(info->uuid));
 #endif
 
+#ifdef CONFIG_PARTITION_TYPE_GUID
+	memset(info->type_guid, 0, sizeof(info->type_guid));
+#endif
+
+	debug("%s: part_type:%d\n", __func__, dev_desc->part_type);
 	drv = part_driver_lookup_type(dev_desc->part_type);
 	if (!drv) {
-		debug("## Unknown partition table type %x\n",
-		      dev_desc->part_type);
+		debug("%s: *** Unknown partition table type %x, return -EPROTONOSUPPORT\n", __func__, dev_desc->part_type);
 		return -EPROTONOSUPPORT;
 	}
 	if (!drv->get_info) {
-		PRINTF("## Driver %s does not have the get_info() method\n",
-		       drv->name);
+		debug("%s: *** Driver %s does not have the get_info() method, return -ENOSYS\n", __func__, drv->name);
 		return -ENOSYS;
 	}
 	if (drv->get_info(dev_desc, part, info) == 0) {
-		PRINTF("## Valid %s partition found ##\n", drv->name);
+		strcpy(info->drv_name, drv->name);
+		debug("%s: ### Part: %d Valid %s partition found, part_type: %d name: %s ###\n", __func__, part, info->drv_name, dev_desc->part_type, info->name);
 		return 0;
 	}
 #endif /* HAVE_BLOCK_DEVICE */
-
+	debug("%s: ERROR return -1\n", __func__);
 	return -1;
 }
 
 int blk_get_device_by_str(const char *ifname, const char *dev_hwpart_str,
 			  struct blk_desc **dev_desc)
 {
+	debug("%s: was called ifname:%s dev_hwpart_str:%s\n", __func__, ifname, dev_hwpart_str);
+
 	char *ep;
 	char *dup_str = NULL;
 	const char *dev_str, *hwpart_str;
@@ -348,8 +351,7 @@ int blk_get_device_by_str(const char *ifname, const char *dev_hwpart_str,
 
 	dev = simple_strtoul(dev_str, &ep, 16);
 	if (*ep) {
-		printf("** Bad device specification %s %s **\n",
-		       ifname, dev_str);
+		debug("%s: *** Bad device specification %s %s **\n", __func__, ifname, dev_str);
 		dev = -EINVAL;
 		goto cleanup;
 	}
@@ -357,16 +359,16 @@ int blk_get_device_by_str(const char *ifname, const char *dev_hwpart_str,
 	if (hwpart_str) {
 		hwpart = simple_strtoul(hwpart_str, &ep, 16);
 		if (*ep) {
-			printf("** Bad HW partition specification %s %s **\n",
-			    ifname, hwpart_str);
+			debug("%s: *** Bad HW partition specification %s %s **\n", __func__, ifname, hwpart_str);
 			dev = -EINVAL;
 			goto cleanup;
 		}
 	}
 
+	debug("%s: call get_dev_hwpart(ifname, dev, hwpart) hwpart:%d\n", __func__, hwpart);
 	*dev_desc = get_dev_hwpart(ifname, dev, hwpart);
 	if (!(*dev_desc) || ((*dev_desc)->type == DEV_TYPE_UNKNOWN)) {
-		printf("** Bad device %s %s **\n", ifname, dev_hwpart_str);
+		debug("%s: *** Bad device %s %s ***\n", __func__, ifname, dev_hwpart_str);
 		dev = -ENOENT;
 		goto cleanup;
 	}
@@ -377,12 +379,15 @@ int blk_get_device_by_str(const char *ifname, const char *dev_hwpart_str,
 	 * Does not need to be done for hwpart 0 since it is default and
 	 * already loaded.
 	 */
-	if(hwpart != 0)
+	if(hwpart != 0) {
 		part_init(*dev_desc);
+	}
 #endif
 
 cleanup:
 	free(dup_str);
+
+	debug("%s: was left return:%d\n", __func__, dev);
 	return dev;
 }
 

@@ -5,7 +5,13 @@
 # SPDX-License-Identifier:	GPL-2.0+
 #
 
-#ccflags-y += -DET_DEBUG -DDEBUG
+ccflags-y += -DET_DEBUG -DDEBUG
+
+ifdef CONFIG_TARGET_MX6QMF0300
+obj-y += part_efi.o
+obj-y += part_dos.o
+obj-y += part.o
+endif
 
 obj-$(CONFIG_PARTITIONS) 	+= part.o
 obj-$(CONFIG_$(SPL_)MAC_PARTITION)   += part_mac.o

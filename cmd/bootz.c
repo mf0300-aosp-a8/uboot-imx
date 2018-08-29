@@ -4,6 +4,7 @@
  *
  * SPDX-License-Identifier:	GPL-2.0+
  */
+#define _DEBUG
 
 #include <common.h>
 #include <bootm.h>
@@ -25,26 +26,28 @@ int __weak bootz_setup(ulong image, ulong *start, ulong *end)
 static int bootz_start(cmd_tbl_t *cmdtp, int flag, int argc,
 			char * const argv[], bootm_headers_t *images)
 {
+	debug("%s: was called\n", __FUNCTION__);
 	int ret;
 	ulong zi_start, zi_end;
 
-	ret = do_bootm_states(cmdtp, flag, argc, argv, BOOTM_STATE_START,
-			      images, 1);
+	ret = do_bootm_states(cmdtp, flag, argc, argv, BOOTM_STATE_START, images, 1);
 
 	/* Setup Linux kernel zImage entry point */
 	if (!argc) {
 		images->ep = load_addr;
-		debug("*  kernel: default image load address = 0x%08lx\n",
+		printf("*  kernel: default image load address = 0x%08lx\n",
 				load_addr);
 	} else {
 		images->ep = simple_strtoul(argv[0], NULL, 16);
-		debug("*  kernel: cmdline image address = 0x%08lx\n",
+		printf("*  kernel: cmdline image address = 0x%08lx\n",
 			images->ep);
 	}
 
 	ret = bootz_setup(images->ep, &zi_start, &zi_end);
-	if (ret != 0)
+	if (ret != 0) {
+		debug("%s: bootz_setup(images->ep, &zi_start, &zi_end) return 1\n", __FUNCTION__);
 		return 1;
+	}
 
 	lmb_reserve(&images->lmb, images->ep, zi_end - zi_start);
 
@@ -52,8 +55,10 @@ static int bootz_start(cmd_tbl_t *cmdtp, int flag, int argc,
 	 * Handle the BOOTM_STATE_FINDOTHER state ourselves as we do not
 	 * have a header that provide this informaiton.
 	 */
-	if (bootm_find_images(flag, argc, argv))
+	if (bootm_find_images(flag, argc, argv)) {
+		debug("%s: bootm_find_images(flag, argc, argv) return 1\n", __FUNCTION__);
 		return 1;
+	}
 
 #ifdef CONFIG_SECURE_BOOT
 	extern uint32_t authenticate_image(
@@ -63,6 +68,7 @@ static int bootz_start(cmd_tbl_t *cmdtp, int flag, int argc,
 		return 1;
 	}
 #endif
+	debug("%s: was left return 0\n", __FUNCTION__);
 	return 0;
 }
 
@@ -70,9 +76,11 @@ int do_bootz(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 {
 	int ret;
 
+	debug("%s: was called\n", __FUNCTION__);
 	/* Consume 'bootz' */
 	argc--; argv++;
 
+	debug("%s: bootz_start(cmdtp, flag, argc, argv, &images)\n", __FUNCTION__);
 	if (bootz_start(cmdtp, flag, argc, argv, &images))
 		return 1;
 
@@ -80,17 +88,20 @@ int do_bootz(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 	 * We are doing the BOOTM_STATE_LOADOS state ourselves, so must
 	 * disable interrupts ourselves
 	 */
+	debug("%s: bootm_disable_interrupts()\n", __FUNCTION__);
 	bootm_disable_interrupts();
 
+	debug("%s: do_bootm_states()\n", __FUNCTION__);
 	images.os.os = IH_OS_LINUX;
 	ret = do_bootm_states(cmdtp, flag, argc, argv,
 #ifdef CONFIG_SYS_BOOT_RAMDISK_HIGH
 			      BOOTM_STATE_RAMDISK |
 #endif
 			      BOOTM_STATE_OS_PREP | BOOTM_STATE_OS_FAKE_GO |
-			      BOOTM_STATE_OS_GO,
+			      BOOTM_STATE_OS_GO | BOOTM_STATE_FDT,
 			      &images, 1);
 
+	debug("%s: was left\n", __FUNCTION__);
 	return ret;
 }
 

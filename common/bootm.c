@@ -4,6 +4,7 @@
  *
  * SPDX-License-Identifier:	GPL-2.0+
  */
+#define _DEBUG
 
 #ifndef USE_HOSTCC
 #include <common.h>
@@ -68,8 +69,7 @@ static void boot_start_lmb(bootm_headers_t *images)
 static inline void boot_start_lmb(bootm_headers_t *images) { }
 #endif
 
-static int bootm_start(cmd_tbl_t *cmdtp, int flag, int argc,
-		       char * const argv[])
+static int bootm_start(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 {
 	memset((void *)&images, 0, sizeof(images));
 	images.verify = getenv_yesno("verify");
@@ -82,8 +82,7 @@ static int bootm_start(cmd_tbl_t *cmdtp, int flag, int argc,
 	return 0;
 }
 
-static int bootm_find_os(cmd_tbl_t *cmdtp, int flag, int argc,
-			 char * const argv[])
+static int bootm_find_os(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 {
 	const void *os_hdr;
 	bool ep_found = false;
@@ -112,40 +111,32 @@ static int bootm_find_os(cmd_tbl_t *cmdtp, int flag, int argc,
 #endif
 #if IMAGE_ENABLE_FIT
 	case IMAGE_FORMAT_FIT:
-		if (fit_image_get_type(images.fit_hdr_os,
-				       images.fit_noffset_os,
-				       &images.os.type)) {
+		if (fit_image_get_type(images.fit_hdr_os, images.fit_noffset_os, &images.os.type)) {
 			puts("Can't get image type!\n");
 			bootstage_error(BOOTSTAGE_ID_FIT_TYPE);
 			return 1;
 		}
 
-		if (fit_image_get_comp(images.fit_hdr_os,
-				       images.fit_noffset_os,
-				       &images.os.comp)) {
+		if (fit_image_get_comp(images.fit_hdr_os, images.fit_noffset_os, &images.os.comp)) {
 			puts("Can't get image compression!\n");
 			bootstage_error(BOOTSTAGE_ID_FIT_COMPRESSION);
 			return 1;
 		}
 
-		if (fit_image_get_os(images.fit_hdr_os, images.fit_noffset_os,
-				     &images.os.os)) {
+		if (fit_image_get_os(images.fit_hdr_os, images.fit_noffset_os, &images.os.os)) {
 			puts("Can't get image OS!\n");
 			bootstage_error(BOOTSTAGE_ID_FIT_OS);
 			return 1;
 		}
 
-		if (fit_image_get_arch(images.fit_hdr_os,
-				       images.fit_noffset_os,
-				       &images.os.arch)) {
+		if (fit_image_get_arch(images.fit_hdr_os, images.fit_noffset_os, &images.os.arch)) {
 			puts("Can't get image ARCH!\n");
 			return 1;
 		}
 
 		images.os.end = fit_get_end(images.fit_hdr_os);
 
-		if (fit_image_get_load(images.fit_hdr_os, images.fit_noffset_os,
-				       &images.os.load)) {
+		if (fit_image_get_load(images.fit_hdr_os, images.fit_noffset_os, &images.os.load)) {
 			puts("Can't get image load address!\n");
 			bootstage_error(BOOTSTAGE_ID_FIT_LOADADDR);
 			return 1;
@@ -226,39 +217,53 @@ static int bootm_find_os(cmd_tbl_t *cmdtp, int flag, int argc,
  */
 int bootm_find_images(int flag, int argc, char * const argv[])
 {
+	debug("%s: was called\n", __FUNCTION__);
 	int ret;
 
+#if defined IMAGE_ENABLE_OF_LIBFDT
+	debug("%s: IMAGE_ENABLE_OF_LIBFDT was defined\n", __FUNCTION__);
+#else
+	debug("%s: IMAGE_ENABLE_OF_LIBFDT was not defined\n", __FUNCTION__);
+#endif
 	/* find ramdisk */
 	ret = boot_get_ramdisk(argc, argv, &images, IH_INITRD_ARCH,
 			       &images.rd_start, &images.rd_end);
 	if (ret) {
-		puts("Ramdisk image is corrupt or invalid\n");
+		debug("%s: Ramdisk image is corrupt or invalid\n", __FUNCTION__);
 		return 1;
 	}
+	debug("%s: Ramdisk image is ok\n", __FUNCTION__);
 
-#if IMAGE_ENABLE_OF_LIBFDT
+#if defined IMAGE_ENABLE_OF_LIBFDT
 	/* find flattened device tree */
-	ret = boot_get_fdt(flag, argc, argv, IH_ARCH_DEFAULT, &images,
-			   &images.ft_addr, &images.ft_len);
+	debug("%s: Find flattened device tree\n", __FUNCTION__);
+	ret = boot_get_fdt(flag, argc, argv, IH_ARCH_DEFAULT, &images, 
+		&images.ft_addr, &images.ft_len);
+	debug("%s: boot_get_fdt() return:%u images.ft_addr:%p images.ft_len:%u\n", 
+		__FUNCTION__, ret, (ulong)images.ft_addr, images.ft_len);
 	if (ret) {
-		puts("Could not find a valid device tree\n");
+		debug("%s: Could not find a valid device tree\n", __FUNCTION__);
 		return 1;
 	}
+	debug("%s: FDT image is ok\n", __FUNCTION__);
+	debug("%s: set_working_fdt_addr((ulong)images.ft_addr) images.ft_addr:%p\n", 
+		__FUNCTION__, (ulong)images.ft_addr);
 	set_working_fdt_addr((ulong)images.ft_addr);
 #endif
 
-#if IMAGE_ENABLE_FIT
+#if defined IMAGE_ENABLE_FIT
 #if defined(CONFIG_FPGA) && defined(CONFIG_FPGA_XILINX)
 	/* find bitstreams */
 	ret = boot_get_fpga(argc, argv, &images, IH_ARCH_DEFAULT,
 			    NULL, NULL);
 	if (ret) {
-		printf("FPGA image is corrupted or invalid\n");
+		debug("%s: FPGA image is corrupted or invalid\n", __FUNCTION__);
 		return 1;
 	}
 #endif
 
 	/* find all of the loadables */
+	debug("%s: Find all of the loadables\n", __FUNCTION__);
 	ret = boot_get_loadable(argc, argv, &images, IH_ARCH_DEFAULT,
 			       NULL, NULL);
 	if (ret) {
@@ -266,7 +271,7 @@ int bootm_find_images(int flag, int argc, char * const argv[])
 		return 1;
 	}
 #endif
-
+	debug("%s: was left\n", __FUNCTION__);
 	return 0;
 }
 
@@ -322,7 +327,7 @@ static int handle_decomp_error(int comp_type, size_t uncomp_size,
 	if (uncomp_size >= unc_len)
 		printf("Image too large: increase CONFIG_SYS_BOOTM_LEN\n");
 	else
-		printf("%s: uncompress error %d\n", name, ret);
+		debug("%s: uncompress error %d\n", name, ret);
 
 	/*
 	 * The decompression routines are now safe, so will not write beyond
@@ -449,15 +454,15 @@ static int bootm_load_os(bootm_headers_t *images, unsigned long *load_end,
 	}
 	flush_cache(load, ALIGN(*load_end - load, ARCH_DMA_MINALIGN));
 
-	debug("   kernel loaded at 0x%08lx, end = 0x%08lx\n", load, *load_end);
+	printf("   kernel loaded at 0x%08lx, end = 0x%08lx\n", load, *load_end);
 	bootstage_mark(BOOTSTAGE_ID_KERNEL_LOADED);
 
 	no_overlap = (os.comp == IH_COMP_NONE && load == image_start);
 
 	if (!no_overlap && (load < blob_end) && (*load_end > blob_start)) {
-		debug("images.os.start = 0x%lX, images.os.end = 0x%lx\n",
+		printf("images.os.start = 0x%lX, images.os.end = 0x%lx\n",
 		      blob_start, blob_end);
-		debug("images.os.load = 0x%lx, load_end = 0x%lx\n", load,
+		printf("images.os.load = 0x%lx, load_end = 0x%lx\n", load,
 		      *load_end);
 
 		/* Check what type of image this is. */
@@ -540,7 +545,7 @@ static void fixup_silent_linux(void)
 	else if (want_silent == -1 && !(gd->flags & GD_FLG_SILENT))
 		return;
 
-	debug("before silent fix-up: %s\n", cmdline);
+	printf("before silent fix-up: %s\n", cmdline);
 	if (cmdline && (cmdline[0] != '\0')) {
 		char *start = strstr(cmdline, CONSOLE_ARG);
 
@@ -570,7 +575,7 @@ static void fixup_silent_linux(void)
 	}
 
 	setenv("bootargs", env_val);
-	debug("after silent fix-up: %s\n", env_val);
+	printf("after silent fix-up: %s\n", env_val);
 	free(buf);
 }
 #endif /* CONFIG_SILENT_CONSOLE */
@@ -603,9 +608,16 @@ static void fixup_silent_linux(void)
 int do_bootm_states(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[],
 		    int states, bootm_headers_t *images, int boot_progress)
 {
+	debug("%s: was called\n", __FUNCTION__);
 	boot_os_fn *boot_fn;
 	ulong iflag = 0;
 	int ret = 0, need_boot_fn;
+
+#if defined IMAGE_ENABLE_OF_LIBFDT
+	debug("%s: IMAGE_ENABLE_OF_LIBFDT was defined\n", __FUNCTION__);
+#else
+	debug("%s: IMAGE_ENABLE_OF_LIBFDT was not defined\n", __FUNCTION__);
+#endif
 
 	images->state |= states;
 
@@ -615,33 +627,45 @@ int do_bootm_states(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[],
 	 */
 	if (states & BOOTM_STATE_START)
 		ret = bootm_start(cmdtp, flag, argc, argv);
+	debug("%s: bootm_start(cmdtp, flag, argc, argv) ret:%u\n", 
+		__FUNCTION__, ret);
 
 	if (!ret && (states & BOOTM_STATE_FINDOS))
 		ret = bootm_find_os(cmdtp, flag, argc, argv);
+	debug("%s: bootm_find_os(cmdtp, flag, argc, argv) ret:%u\n", 
+		__FUNCTION__, ret);
 
 	if (!ret && (states & BOOTM_STATE_FINDOTHER))
 		ret = bootm_find_other(cmdtp, flag, argc, argv);
+	debug("%s: bootm_find_other(cmdtp, flag, argc, argv) ret:%u\n", 
+		__FUNCTION__, ret);
 
 	/* Load the OS */
 	if (!ret && (states & BOOTM_STATE_LOADOS)) {
 		ulong load_end;
 
+		debug("%s: bootm_disable_interrupts()\n", __FUNCTION__);
 		iflag = bootm_disable_interrupts();
+		debug("%s: bootm_load_os(images, &load_end, 0)\n", __FUNCTION__);
 		ret = bootm_load_os(images, &load_end, 0);
-		if (ret == 0)
+		if (ret == 0) {
+			debug("%s: lmb_reserve()\n", __FUNCTION__);
 			lmb_reserve(&images->lmb, images->os.load,
 				    (load_end - images->os.load));
+		}
 		else if (ret && ret != BOOTM_ERR_OVERLAP)
 			goto err;
 		else if (ret == BOOTM_ERR_OVERLAP)
 			ret = 0;
 	}
 
+	debug("%s: CHECK VALUES ***\n    images->ft_addr:%p\n    images->ft_len:%u\n",
+		__FUNCTION__, images->ft_addr, images->ft_len);
 	/* Relocate the ramdisk */
-#ifdef CONFIG_SYS_BOOT_RAMDISK_HIGH
+#if defined CONFIG_SYS_BOOT_RAMDISK_HIGH
 	if (!ret && (states & BOOTM_STATE_RAMDISK)) {
 		ulong rd_len = images->rd_end - images->rd_start;
-
+		debug("%s: boot_ramdisk_high()\n", __FUNCTION__);
 		ret = boot_ramdisk_high(&images->lmb, images->rd_start,
 			rd_len, &images->initrd_start, &images->initrd_end);
 		if (!ret) {
@@ -650,26 +674,37 @@ int do_bootm_states(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[],
 		}
 	}
 #endif
-#if IMAGE_ENABLE_OF_LIBFDT && defined(CONFIG_LMB)
+
+	debug("%s: CHECK VALUES ***\n    images->ft_addr:%p\n    images->ft_len:%u\n",
+		__FUNCTION__, images->ft_addr, images->ft_len);
+#if defined IMAGE_ENABLE_OF_LIBFDT && defined(CONFIG_LMB)
 	if (!ret && (states & BOOTM_STATE_FDT)) {
+		debug("%s: boot_fdt_add_mem_rsv_regions(&images->lmb, images->ft_addr)\n",
+			__FUNCTION__);
 		boot_fdt_add_mem_rsv_regions(&images->lmb, images->ft_addr);
-		ret = boot_relocate_fdt(&images->lmb, &images->ft_addr,
-					&images->ft_len);
+		debug("%s: boot_relocate_fdt(&images->lmb, &images->ft_addr,&images->ft_len) %p %p %u\n",
+			__FUNCTION__, images->lmb, images->ft_addr, images->ft_len);
+		ret = boot_relocate_fdt(&images->lmb, &images->ft_addr, &images->ft_len);
+		debug("%s: after boot_relocate_fdt(&images->lmb, &images->ft_addr,&images->ft_len) %p %p %u\n",
+			__FUNCTION__, images->lmb, images->ft_addr, images->ft_len);
 	}
 #endif
+
+	debug("%s: CHECK VALUES ***\n    images->ft_addr:%p\n    images->ft_len:%u\n",__FUNCTION__,
+		images->ft_addr, images->ft_len);
 
 	/* From now on, we need the OS boot function */
 	if (ret)
 		return ret;
 	boot_fn = bootm_os_get_boot_func(images->os.os);
-	need_boot_fn = states & (BOOTM_STATE_OS_CMDLINE |
-			BOOTM_STATE_OS_BD_T | BOOTM_STATE_OS_PREP |
-			BOOTM_STATE_OS_FAKE_GO | BOOTM_STATE_OS_GO);
+	need_boot_fn = states & (BOOTM_STATE_OS_CMDLINE | BOOTM_STATE_OS_BD_T |
+		BOOTM_STATE_OS_PREP | BOOTM_STATE_OS_FAKE_GO | BOOTM_STATE_OS_GO);
 	if (boot_fn == NULL && need_boot_fn) {
-		if (iflag)
+		if (iflag) {
 			enable_interrupts();
-		printf("ERROR: booting os '%s' (%d) is not supported\n",
-		       genimg_get_os_name(images->os.os), images->os.os);
+		}
+		printf("ERROR: booting os '%s' (%d) is not supported\n", 
+			genimg_get_os_name(images->os.os), images->os.os);
 		bootstage_error(BOOTSTAGE_ID_CHECK_BOOT_OS);
 		return 1;
 	}
@@ -708,8 +743,7 @@ int do_bootm_states(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[],
 
 	/* Now run the OS! We hope this doesn't return */
 	if (!ret && (states & BOOTM_STATE_OS_GO))
-		ret = boot_selected_os(argc, argv, BOOTM_STATE_OS_GO,
-				images, boot_fn);
+		ret = boot_selected_os(argc, argv, BOOTM_STATE_OS_GO, images, boot_fn);
 
 	/* Deal with any fallout */
 err:
@@ -891,7 +925,7 @@ static const void *boot_get_kernel(cmd_tbl_t *cmdtp, int flag, int argc,
 		return NULL;
 	}
 
-	debug("   kernel data at 0x%08lx, len = 0x%08lx (%ld)\n",
+	printf("   kernel data at 0x%08lx, len = 0x%08lx (%ld)\n",
 	      *os_data, *os_len, *os_len);
 
 	return buf;

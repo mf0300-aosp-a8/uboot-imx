@@ -54,6 +54,7 @@
 #define FASTBOOT_PARTITION_GPT "gpt"
 #define FASTBOOT_PARTITION_PRDATA "prdata"
 #define FASTBOOT_PARTITION_FBMISC "fbmisc"
+#define FASTBOOT_PARTITION_USERDATA "userdata"
 #else
 #define FASTBOOT_PARTITION_BOOT "boot"
 #define FASTBOOT_PARTITION_RECOVERY "recovery"
@@ -66,6 +67,7 @@
 #define FASTBOOT_PARTITION_MISC "misc"
 #define FASTBOOT_PARTITION_PRDATA "presistdata"
 #define FASTBOOT_PARTITION_FBMISC "fbmisc"
+#define FASTBOOT_PARTITION_USERDATA "userdata"
 #endif
 
 enum {
@@ -151,7 +153,15 @@ struct cmd_fastboot_interface {
 */
 struct fastboot_ptentry {
 	/* The logical name for this partition, null terminated */
-	char name[16];
+	unsigned char name[32];
+#ifdef CONFIG_PARTITION_UUIDS
+	/* filesystem UUID as string, if exists */
+	unsigned char uuid[37];
+#endif
+	/* partition file system type in string */
+	unsigned char fstype[16];
+	/* The sector size in bytes */
+	unsigned int blksz;
 	/* The start wrt the nand part, must be multiple of nand block size */
 	unsigned int start;
 	/* The length of the partition, must be multiple of nand block size */
@@ -163,12 +173,6 @@ struct fastboot_ptentry {
 	unsigned int partition_id;
 	/* partition number in block device */
 	unsigned int partition_index;
-	/* partition file system type in string */
-	char fstype[16];
-	/* filesystem UUID as string, if exists */
-#ifdef CONFIG_PARTITION_UUIDS
-	char uuid[37];
-#endif
 };
 
 struct fastboot_device_info {
@@ -188,6 +192,7 @@ void fastboot_setup(void);
 
 /* tools to populate and query the partition table */
 void fastboot_flash_add_ptn(struct fastboot_ptentry *ptn);
+void fastboot_flash_add_ptn_index(struct fastboot_ptentry *ptn, int index);
 struct fastboot_ptentry *fastboot_flash_find_ptn(const char *name);
 struct fastboot_ptentry *fastboot_flash_get_ptn(unsigned n);
 unsigned int fastboot_flash_get_ptn_count(void);

@@ -19,6 +19,10 @@ ifdef CONFIG_BOOT_RETRY_TIME
 obj-y += bootretry.o
 endif
 
+ifdef CONFIG_TARGET_MX6QMF0300
+obj-y += env_mmc.o
+endif
+
 # boards
 obj-y += board_f.o
 obj-y += board_r.o
