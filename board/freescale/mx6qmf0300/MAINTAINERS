@@ -1,0 +1,6 @@
+MX6QMF0300 BOARD
+M:	Andrew Tishchenko <a2.tishchenko@itransition.com>
+S:	Maintained
+F:	board/freescale/mx6qmf0300/
+F:	include/configs/mx6qmf0300.h
+F:	configs/mx6qmf0300_defconfig
