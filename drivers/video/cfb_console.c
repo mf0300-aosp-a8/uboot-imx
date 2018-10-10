@@ -1726,7 +1726,7 @@ static void plot_logo_or_black(void *screen, int x, int y, int black);
 
 static void logo_plot(void *screen, int x, int y)
 {
-	printf("%s: call plot_logo_or_black x:%d y:%d\n", __func__, x, y);
+	debug("%s: call plot_logo_or_black x:%d y:%d\n", __func__, x, y);
 	plot_logo_or_black(screen, x, y, 0);
 }
 
@@ -1751,6 +1751,24 @@ U_BOOT_CMD(
 	   " "
 	   );
 
+static const char *getGDFormat() {
+	switch (VIDEO_DATA_FORMAT) {
+	case GDF__8BIT_INDEX:
+		return "GDF__8BIT_INDEX";
+	case GDF__8BIT_332RGB:
+		return "GDF__8BIT_332RGB";
+	case GDF_15BIT_555RGB:
+		return "GDF_15BIT_555RGB";
+	case GDF_16BIT_565RGB:
+		return "GDF_16BIT_565RGB";
+	case GDF_32BIT_X888RGB:
+		return "GDF_32BIT_X888RGB";
+	case GDF_24BIT_888RGB:
+		return "GDF_24BIT_888RGB";
+	}
+	return "GDF_UNKNOWN";
+}
+
 static void fill_screen_with_logo_color(void *screen) {
 	unsigned char r, g, b, *logo_red, *logo_blue, *logo_green;
 	unsigned char *source;
@@ -1763,6 +1781,9 @@ static void fill_screen_with_logo_color(void *screen) {
 #ifdef CONFIG_VIDEO_BMP_LOGO
 	source = bmp_logo_bitmap;
 
+	debug("%s: GD Format: %s Total colors: %d\n",
+		__func__, getGDFormat(), BMP_LOGO_COLORS);
+
 	/* Allocate temporary space for computing colormap */
 	logo_red = malloc(BMP_LOGO_COLORS);
 	logo_green = malloc(BMP_LOGO_COLORS);
@@ -1772,6 +1793,8 @@ static void fill_screen_with_logo_color(void *screen) {
 		logo_red[i] = (bmp_logo_palette[i] & 0x0f00) >> 4;
 		logo_green[i] = (bmp_logo_palette[i] & 0x00f0);
 		logo_blue[i] = (bmp_logo_palette[i] & 0x000f) << 4;
+		debug("%s: Color index: %d R:%p G:%p B:%p\n",
+			__func__, i, logo_red[i], logo_green[i], logo_blue[i]);
 	}
 #else
 	source = linux_logo;
@@ -1851,7 +1874,7 @@ static void plot_logo_or_black(void *screen, int x, int y, int black)
 	fill_screen_with_logo_color(video_fb_address);
 
 #ifdef CONFIG_SPLASH_SCREEN_ALIGN
-	printf("%s: LOGO PRE X:%d Y:%d BLACK:%d\n", __func__, x, y, black);
+	debug("%s: LOGO PRE X:%d Y:%d BLACK:%d\n", __func__, x, y, black);
 	if (x == BMP_ALIGN_CENTER)
 		x = max(0, (int)(VIDEO_VISIBLE_COLS - VIDEO_LOGO_WIDTH) / 2);
 	else if (x < 0)
@@ -1860,13 +1883,16 @@ static void plot_logo_or_black(void *screen, int x, int y, int black)
 		y = max(0, (int)(VIDEO_VISIBLE_ROWS - VIDEO_LOGO_HEIGHT) / 2);
 	else if (y < 0)
 		y = max(0, (int)(VIDEO_VISIBLE_ROWS - VIDEO_LOGO_HEIGHT + y + 1));
-	printf("%s: LOGO POST X:%d Y:%d BLACK:%d\n", __func__, x, y, black);
+	debug("%s: LOGO POST X:%d Y:%d BLACK:%d\n", __func__, x, y, black);
 #endif /* CONFIG_SPLASH_SCREEN_ALIGN */
 
 	dest = (unsigned char *)screen + y * VIDEO_LINE_LEN + x * VIDEO_PIXEL_SIZE;
 
 #ifdef CONFIG_VIDEO_BMP_LOGO
 	source = bmp_logo_bitmap;
+
+	debug("%s: GD Format: %s Total colors: %d\n",
+		__func__, getGDFormat(), BMP_LOGO_COLORS);
 
 	/* Allocate temporary space for computing colormap */
 	logo_red = malloc(BMP_LOGO_COLORS);
@@ -1877,6 +1903,8 @@ static void plot_logo_or_black(void *screen, int x, int y, int black)
 		logo_red[i] = (bmp_logo_palette[i] & 0x0f00) >> 4;
 		logo_green[i] = (bmp_logo_palette[i] & 0x00f0);
 		logo_blue[i] = (bmp_logo_palette[i] & 0x000f) << 4;
+		debug("%s: Color index: %d R:%p G:%p B:%p\n",
+			__func__, i, logo_red[i], logo_green[i], logo_blue[i]);
 	}
 #else
 	source = linux_logo;
@@ -1969,8 +1997,6 @@ static void plot_logo_or_black(void *screen, int x, int y, int black)
 
 static void *video_logo(void)
 {
-	printf("%s: enter\n", __func__);
-
 	char info[128];
 	__maybe_unused int y_off = 0;
 	__maybe_unused ulong addr;
@@ -1981,7 +2007,7 @@ static void *video_logo(void)
 #ifdef CONFIG_SPLASH_SCREEN_ALIGN
 	splash_get_pos(&video_logo_xpos, &video_logo_ypos);
 #endif
-	printf("%s: splash_get_pos X:%d Y:%d\n", __func__, video_logo_xpos, video_logo_ypos);
+	debug("%s: splash_get_pos X:%d Y:%d\n", __func__, video_logo_xpos, video_logo_ypos);
 
 #ifdef CONFIG_SPLASH_SCREEN
 	s = getenv("splashimage");
@@ -2000,7 +2026,7 @@ static void *video_logo(void)
 	}
 #endif /* CONFIG_SPLASH_SCREEN */
 
-	printf("%s: logo_plot X:%d Y:%d\n", __func__, video_logo_xpos, video_logo_ypos);
+	debug("%s: logo_plot X:%d Y:%d\n", __func__, video_logo_xpos, video_logo_ypos);
 	logo_plot(video_fb_address, video_logo_xpos, video_logo_ypos);
 
 #ifdef CONFIG_SPLASH_SCREEN_ALIGN

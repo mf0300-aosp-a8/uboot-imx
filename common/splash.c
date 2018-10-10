@@ -60,7 +60,7 @@ __weak int splash_screen_prepare(void)
 #ifdef CONFIG_SPLASH_SCREEN_ALIGN
 void splash_get_pos(int *x, int *y)
 {
-	printf("%s: enter BMP_ALIGN_CENTER:%d\n", __func__, BMP_ALIGN_CENTER);
+	debug("%s: enter BMP_ALIGN_CENTER:%d\n", __func__, BMP_ALIGN_CENTER);
 	*x = BMP_ALIGN_CENTER;
 	*y = BMP_ALIGN_CENTER;
 }
