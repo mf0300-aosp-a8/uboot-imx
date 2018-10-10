@@ -112,7 +112,7 @@ static void print_partition_extended(struct blk_desc *dev_desc,
 	int i;
 
 	if (blk_dread(dev_desc, ext_part_sector, 1, (ulong *)buffer) != 1) {
-		printf ("** Can't read partition table on %d:" LBAFU " **\n",
+		error("Can't read partition table on %d:" LBAFU "\n",
 			dev_desc->devnum, ext_part_sector);
 		return;
 	}
@@ -173,19 +173,15 @@ static int part_get_info_extended(struct blk_desc *dev_desc,
 				  int part_num, int which_part,
 				  disk_partition_t *info, unsigned int disksig)
 {
-	debug("%s: was called ext_part_sector:" LBAFU " relative:" LBAFU " part_num:%d which_part:%d\n", __func__, ext_part_sector, relative, part_num, which_part);
-
 	ALLOC_CACHE_ALIGN_BUFFER(unsigned char, buffer, dev_desc->blksz);
 	dos_partition_t *pt;
 	int i;
 	int dos_type;
 
 	if (blk_dread(dev_desc, ext_part_sector, 1, (ulong *)buffer) != 1) {
-		printf ("%s: *** Can't read partition table on %d:" LBAFU " return -1 ***\n", __func__, dev_desc->devnum, ext_part_sector);
 		return -1;
 	}
 	if (buffer[DOS_PART_MAGIC_OFFSET] != 0x55 || buffer[DOS_PART_MAGIC_OFFSET + 1] != 0xaa) {
-		printf ("%s: *** Bad MBR sector signature 0x%02x%02x return -1\n", __func__, buffer[DOS_PART_MAGIC_OFFSET], buffer[DOS_PART_MAGIC_OFFSET + 1]);
 		return -1;
 	}
 
@@ -213,17 +209,6 @@ static int part_get_info_extended(struct blk_desc *dev_desc,
 			info->sys_ind = pt->sys_ind;
 #if CONFIG_IS_ENABLED(PARTITION_UUIDS)
 			sprintf(info->uuid, "%08x-%02x", disksig, part_num);
-			debug("%s: Partition record %d\n\tinfo->blksz:0x" LBAF "\n" \
-				"\tinfo->start:0x" LBAF "\n\tinfo->size:" LBAFU "\n" \
-				"\tinfo->bootable:%d\n\tinfo->sys_ind:%p\n\tinfo->name:%s\n" \
-				"\tinfo->type_uuid:%s\n", 
-				__func__, i, info->blksz, info->start, info->size, info->bootable, info->sys_ind, 
-				info->name, info->uuid);
-#else			
-			debug("%s: Partition record %d\n\tinfo->blksz:0x" LBAF "\n" \
-				"\tinfo->start:0x" LBAF "\n\tinfo->size:" LBAFU "\n" \
-				"\tinfo->bootable:%d\n\tinfo->sys_ind:%p\n", 
-				__func__, i, info->blksz, info->start, info->size, info->bootable, info->sys_ind);
 #endif
 			return 0;
 		}
@@ -254,11 +239,8 @@ static int part_get_info_extended(struct blk_desc *dev_desc,
 #if CONFIG_IS_ENABLED(PARTITION_UUIDS)
 		info->uuid[0] = 0;
 #endif
-		debug("%s: was left return 0\n", __func__);
 		return 0;
 	}
-
-	debug("%s: was left return -1\n", __func__);
 	return -1;
 }
 
@@ -285,8 +267,7 @@ int write_mbr_partition(struct blk_desc *dev_desc, void *buf)
 
 	/* write MBR */
 	if (blk_dwrite(dev_desc, 0, 1, buf) != 1) {
-		debug("%s: Failed writing '%s' (1 blks at 0x0)\n",
-		       __func__, "MBR");
+		error("Failed writing 'MBR' (1 blks at 0x0)\n");
 		return 1;
 	}
 
