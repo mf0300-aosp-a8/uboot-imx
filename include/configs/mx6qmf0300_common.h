@@ -143,6 +143,9 @@
         "rdinit=/sdcard.flasher.rc " \
         "enable_wait_mode=off "\
         "video=mxcfb0:dev=ldb,fbpix=RGB32,bpp=32 " \
+        "video=mxcfb1:dev=hdmi,if=RGB24,bpp=32 " \
+        "video=mxcfb2:off " \
+        "video=mxcfb3:off " \
         "consoleblank=0 " \
         "androidboot.hardware=freescale " \
         "cma=384M " \
@@ -161,7 +164,9 @@
         "rootfstype=ext4 " \
         "enable_wait_mode=off "\
         "video=mxcfb0:dev=ldb,fbpix=RGB32,bpp=32 " \
-        "video=mxcfb1:off video=mxcfb2:off video=mxcfb3:off " \
+        "video=mxcfb1:dev=hdmi,if=RGB24,bpp=32 " \
+        "video=mxcfb2:off " \
+        "video=mxcfb3:off " \
         "vmalloc=128M " \
         "androidboot.console=" CONFIG_CONSOLE_DEV " " \
         "consoleblank=0 " \
@@ -180,7 +185,9 @@
         "rootfstype=ext4 " \
         "enable_wait_mode=off "\
         "video=mxcfb0:dev=ldb,fbpix=RGB32,bpp=32 " \
-        "video=mxcfb1:off video=mxcfb2:off video=mxcfb3:off " \
+        "video=mxcfb1:dev=hdmi,if=RGB24,bpp=32 " \
+        "video=mxcfb2:off " \
+        "video=mxcfb3:off " \
         "vmalloc=128M " \
         "androidboot.console=" CONFIG_CONSOLE_DEV " " \
         "consoleblank=0 " \
