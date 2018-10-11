@@ -148,6 +148,7 @@
         "video=mxcfb3:off " \
         "consoleblank=0 " \
         "androidboot.hardware=freescale " \
+        "androidboot.soc_type=imx6q " \
         "cma=384M " \
         "\0" \
     "script=firmware/boot.scr\0" \
@@ -171,6 +172,7 @@
         "androidboot.console=" CONFIG_CONSOLE_DEV " " \
         "consoleblank=0 " \
         "androidboot.hardware=freescale " \
+        "androidboot.soc_type=imx6q " \
         "cma=448M " \
         "galcore.contiguousSize=33554432 " \
         "\0" \
@@ -192,6 +194,7 @@
         "androidboot.console=" CONFIG_CONSOLE_DEV " " \
         "consoleblank=0 " \
         "androidboot.hardware=freescale " \
+        "androidboot.soc_type=imx6q " \
         "androidboot.selinux=permissive " \
         "cma=448M " \
         "galcore.contiguousSize=33554432 " \
