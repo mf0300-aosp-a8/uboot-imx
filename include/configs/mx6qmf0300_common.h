@@ -149,6 +149,7 @@
         "consoleblank=0 " \
         "androidboot.hardware=freescale " \
         "androidboot.soc_type=imx6q " \
+        "androidboot.storage_type=sd " \
         "cma=384M " \
         "\0" \
     "script=firmware/boot.scr\0" \
@@ -173,6 +174,7 @@
         "consoleblank=0 " \
         "androidboot.hardware=freescale " \
         "androidboot.soc_type=imx6q " \
+        "androidboot.storage_type=emmc " \
         "cma=448M " \
         "galcore.contiguousSize=33554432 " \
         "\0" \
@@ -195,6 +197,7 @@
         "consoleblank=0 " \
         "androidboot.hardware=freescale " \
         "androidboot.soc_type=imx6q " \
+        "androidboot.storage_type=emmc " \
         "androidboot.selinux=permissive " \
         "cma=448M " \
         "galcore.contiguousSize=33554432 " \
