@@ -255,7 +255,7 @@
 
 #if defined CONFIG_SYS_BOOT_MMC
 #define CONFIG_ENV_IS_IN_MMC            /* read U-Boot command from MMC */
-#define CONFIG_BOOTCOMMAND              "run bootcmd_android_permissive;"
+#define CONFIG_BOOTCOMMAND              "run bootcmd_android;"
 #define CONFIG_SPLASH_SCREEN
 #define CONFIG_SPLASH_SCREEN_ALIGN
 #elif defined CONFIG_SYS_BOOT_MFG
@@ -266,7 +266,7 @@
 #define CONFIG_BOOTCOMMAND              "run bootcmd_sdcard;"
 #else
 #define CONFIG_ENV_IS_IN_MMC            /* read U-Boot command from MMC by default */
-#define CONFIG_BOOTCOMMAND              "run bootcmd_android_permissive;"
+#define CONFIG_BOOTCOMMAND              "run bootcmd_android;"
 #define CONFIG_SPLASH_SCREEN
 #define CONFIG_SPLASH_SCREEN_ALIGN
 #endif
