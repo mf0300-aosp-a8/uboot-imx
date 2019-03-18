@@ -4,7 +4,6 @@
  *
  * SPDX-License-Identifier:	GPL-2.0+
  */
-#define _DEBUG
 
 #ifndef USE_HOSTCC
 #include <common.h>

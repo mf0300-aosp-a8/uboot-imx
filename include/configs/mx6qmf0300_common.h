@@ -9,8 +9,6 @@
 #ifndef __MX6QMF0300_COMMON_CONFIG_H
 #define __MX6QMF0300_COMMON_CONFIG_H
 
-#define CONFIG_MX6
-
 /* uncomment for PLUGIN mode support */
 /* #define CONFIG_USE_PLUGIN */
 
@@ -26,9 +24,6 @@
 #include "mx6_common.h"
 #include <linux/sizes.h>
 
-#define CONFIG_DISPLAY_CPUINFO
-#define CONFIG_DISPLAY_BOARDINFO
-
 #include <asm/arch/imx-regs.h>
 #include <asm/imx-common/gpio.h>
 
@@ -42,8 +37,6 @@
 /* Size of malloc() pool */
 #define CONFIG_SYS_MALLOC_LEN            (16 * SZ_1M)
 
-#define CONFIG_BOARD_EARLY_INIT_F
-#define CONFIG_BOARD_LATE_INIT
 #define CONFIG_MXC_GPIO
 
 #define CONFIG_MXC_UART
@@ -57,21 +50,17 @@
 #define CONFIG_FSL_ESDHC
 #define CONFIG_FSL_USDHC
 #define CONFIG_SYS_FSL_ESDHC_ADDR        USDHC4_BASE_ADDR
-#define CONFIG_MMC
 #define CONFIG_CMD_MMC
-#define CONFIG_GENERIC_MMC
 #define CONFIG_BOUNCE_BUFFER
 #define CONFIG_CMD_EXT2
 #define CONFIG_CMD_EXT4
 #define CONFIG_CMD_EXT4_WRITE
 #define CONFIG_CMD_FAT
-#define CONFIG_DOS_PARTITION
 #define CONFIG_SUPPORT_EMMC_BOOT /* eMMC specific */
 
 #define CONFIG_CMD_PING
 #define CONFIG_CMD_DHCP
 #define CONFIG_CMD_MII
-#define CONFIG_CMD_NET
 #define CONFIG_FEC_MXC
 #define CONFIG_MII
 #define IMX_FEC_BASE                       ENET_BASE_ADDR
@@ -92,10 +81,7 @@
 
 #define CONFIG_CMD_BMODE
 #define CONFIG_CMD_BOOTZ
-#define CONFIG_CMD_SETEXPR
 #undef CONFIG_CMD_IMLS
-
-#define CONFIG_BOOTDELAY                   3
 
 #define CONFIG_LOADADDR                    0x10800000
 #define CONFIG_SYS_TEXT_BASE               0x17800000
@@ -223,7 +209,6 @@
 
 /* Print Buffer Size */
 #define CONFIG_SYS_PBSIZE (CONFIG_SYS_CBSIZE + sizeof(CONFIG_SYS_PROMPT) + 16)
-#define CONFIG_SYS_MAXARGS                256
 #define CONFIG_SYS_BARGSIZE CONFIG_SYS_CBSIZE
 
 #define CONFIG_SYS_LOAD_ADDR            CONFIG_LOADADDR
@@ -280,11 +265,6 @@
 #endif
 
 /* Framebuffer */
-#define CONFIG_VIDEO
-#define CONFIG_VIDEO_IPUV3
-#define CONFIG_CFB_CONSOLE
-#define CONFIG_VGA_AS_SINGLE_DEVICE
-#define CONFIG_SYS_CONSOLE_IS_IN_ENV
 #define CONFIG_SYS_CONSOLE_OVERWRITE_ROUTINE
 #define CONFIG_VIDEO_BMP_RLE8
 #define CONFIG_BMP_16BPP
