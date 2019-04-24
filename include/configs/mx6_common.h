@@ -15,7 +15,12 @@ defined(CONFIG_MX6DL)) && !defined(CONFIG_MX6S)
 #define CONFIG_ARM_ERRATA_751472
 #define CONFIG_ARM_ERRATA_794072
 #define CONFIG_ARM_ERRATA_761320
-#define CONFIG_ARM_ERRATA_845369
+/*
+ * Due to poor performance of memset and related fuctions, disable this Errata.
+ * Details about performance: https://community.nxp.com/thread/371109
+ * Errata fix implementation: https://patchwork.ozlabs.org/patch/457063/
+ */
+/* #define CONFIG_ARM_ERRATA_845369 */
 #endif
 
 #ifndef CONFIG_SYS_L2CACHE_OFF
