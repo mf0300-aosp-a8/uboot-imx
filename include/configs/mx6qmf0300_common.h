@@ -161,7 +161,6 @@
         "androidboot.hardware=freescale " \
         "androidboot.soc_type=imx6q " \
         "androidboot.storage_type=emmc " \
-        "cma=448M " \
         "galcore.contiguousSize=33554432 " \
         "\0" \
     "bootcmd_android=run android_args;" \
@@ -185,7 +184,6 @@
         "androidboot.soc_type=imx6q " \
         "androidboot.storage_type=emmc " \
         "androidboot.selinux=permissive " \
-        "cma=448M " \
         "galcore.contiguousSize=33554432 " \
         "\0" \
     "bootcmd_android_permissive=run android_permissive_args;" \
