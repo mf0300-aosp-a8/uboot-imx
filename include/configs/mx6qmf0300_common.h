@@ -155,7 +155,7 @@
         "video=mxcfb1:dev=hdmi,if=RGB24,bpp=32 " \
         "video=mxcfb2:off " \
         "video=mxcfb3:off " \
-        "vmalloc=128M " \
+        "vmalloc=768M " \
         "androidboot.console=" CONFIG_CONSOLE_DEV " " \
         "consoleblank=0 " \
         "androidboot.hardware=freescale " \
@@ -178,7 +178,7 @@
         "video=mxcfb1:dev=hdmi,if=RGB24,bpp=32 " \
         "video=mxcfb2:off " \
         "video=mxcfb3:off " \
-        "vmalloc=128M " \
+        "vmalloc=768M " \
         "androidboot.console=" CONFIG_CONSOLE_DEV " " \
         "consoleblank=0 " \
         "androidboot.hardware=freescale " \
